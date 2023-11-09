@@ -9,20 +9,18 @@ use App\Http\Resources\ArtistCollection;
 use App\Http\Resources\ArtistResource;
 use App\Models\Artist;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Http\Request;
-
-use function PHPUnit\Framework\isEmpty;
+use Illuminate\Http\JsonResponse;
 
 class ArtistController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): ArtistCollection
+    public function index()
     {
         $artists = Artist::all();
 
-        return new ArtistCollection($artists);
+        return (new ArtistCollection($artists))->response()->setStatusCode(200);
     }
 
     /**
