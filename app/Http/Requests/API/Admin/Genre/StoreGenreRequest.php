@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Requests\API\Admin;
+namespace App\Http\Requests\API\Admin\Genre;
 
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class ArtistStoreRequest extends FormRequest
+class StoreGenreRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,10 +24,7 @@ class ArtistStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => 'required|string|max:50',
-            'last_name' => 'required|max:50|string',
-            'email' => 'required|email|max:255|unique:artists',
-            'photo' => 'required',
+            'name' => 'required|string|max:100|unique:genres,name',
         ];
     }
 

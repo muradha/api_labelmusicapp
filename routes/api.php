@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\Admin\ArtistController;
+use App\Http\Controllers\API\Admin\GenreController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BankController;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ Route::post('users/login', [AuthController::class, 'login']);
 
 Route::apiResource('artists', ArtistController::class);
 Route::apiResource('banks', BankController::class);
+Route::apiResource('genres', GenreController::class);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();

@@ -20,7 +20,7 @@ class BankController extends Controller
     {
         $banks = Bank::all();
 
-        return (BankResource::collection($banks))->response()->setStatusCode(200);
+        return (new BankCollection($banks))->response()->setStatusCode(200);
     }
 
     /**
@@ -82,7 +82,7 @@ class BankController extends Controller
 
         $updatedBank = Bank::where('id', $id)->first();
 
-        return new BankResource(true, 'Bank updated',$updatedBank);
+        return new BankResource($updatedBank);
     }
 
     /**

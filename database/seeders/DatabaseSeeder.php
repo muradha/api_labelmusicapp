@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Models\Artist;
 use App\Models\Bank;
+use App\Models\Genre;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -17,6 +18,7 @@ class DatabaseSeeder extends Seeder
     {
         // Artist::factory(10)->create();
         // Bank::factory(10)->create();
+        Genre::factory(10)->create();
 
         // \App\Models\User::factory(10)->create();
 

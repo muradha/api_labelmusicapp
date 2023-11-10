@@ -3,74 +3,73 @@
 namespace App\Http\Controllers\API\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\API\Admin\StoreArtistRequest;
-use App\Http\Requests\API\Admin\UpdateArtistRequest;
-use App\Http\Resources\ArtistCollection;
-use App\Http\Resources\ArtistResource;
-use App\Models\Artist;
+use App\Http\Requests\API\Admin\Genre\StoreGenreRequest;
+use App\Http\Requests\API\Admin\Genre\UpdateGenreRequest;
+use App\Http\Resources\GenreCollection;
+use App\Http\Resources\GenreResource;
+use App\Models\Genre;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class ArtistController extends Controller
+class GenreController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $artists = Artist::all();
+        $genres = Genre::all();
 
-        return (new ArtistCollection($artists))->response()->setStatusCode(200);
+        return new GenreCollection($genres);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreArtistRequest $request)
+    public function store(StoreGenreRequest $request)
     {
         $data = $request->validated();
 
-        $artist = Artist::create($data);
+        $genres = Genre::create($data);
 
-        return (new ArtistResource($artist))->response()->setStatusCode(201);
+        return (new GenreResource($genres))->response()->setStatusCode(201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $artist)
+    public function show(string $id)
     {
-        $data = Artist::where('id', $artist)->first();
+        $genre = Genre::where('id', $id)->first();
 
-        if (empty($data)) {
+        if (empty($genre)) {
             throw new HttpResponseException(response()->json([
                 'errors' => [
-                    'message' => 'Artist not found'
+                    'message' => 'Genre not found'
                 ],
             ], 404));
         }
 
-        return (new ArtistResource($data))->response()->setStatusCode(200);
+        return new GenreResource($genre);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateArtistRequest $request, string $id)
+    public function update(UpdateGenreRequest $request, string $id)
     {
-        $artist = Artist::where('id', $id)->first();
+        $genre = Genre::where('id', $id)->first();
 
-        if (empty($artist)) {
+        if (empty($genre)) {
             throw new HttpResponseException(response()->json([
                 'errors' => [
-                    'message' => 'Artist not found'
+                    'message' => 'Genre not found'
                 ],
             ], 404));
         }
 
         $data = $request->validated();
-
-        $isSuccess = $artist->update($data);
+        $isSuccess = $genre->update($data);
 
         if (!$isSuccess) {
             throw new HttpResponseException(response()->json([
@@ -80,7 +79,7 @@ class ArtistController extends Controller
             ], 500));
         }
 
-        return new ArtistResource($artist);
+        return new GenreResource($genre);
     }
 
     /**
@@ -88,17 +87,17 @@ class ArtistController extends Controller
      */
     public function destroy(string $id)
     {
-        $artist = Artist::where('id', $id)->first();
+        $genre = Genre::where('id', $id)->first();
 
-        if (empty($artist)) {
+        if (empty($genre)) {
             throw new HttpResponseException(response()->json([
                 'errors' => [
-                    'message' => 'Artist not found'
+                    'message' => 'Genre not found'
                 ],
             ], 404));
         }
 
-        $artist->delete();
+        $genre->delete();
 
         return response()->json([
             'success' => true
