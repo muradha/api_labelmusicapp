@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\Admin\ArtistController;
 use App\Http\Controllers\API\Admin\GenreController;
+use App\Http\Controllers\API\Admin\UserController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BankController;
 use Illuminate\Http\Request;
@@ -21,9 +22,12 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('users/login', [AuthController::class, 'login']);
 
-Route::apiResource('artists', ArtistController::class);
-Route::apiResource('banks', BankController::class);
-Route::apiResource('genres', GenreController::class);
+Route::apiResources([
+    'users' => UserController::class,
+    'genres' => GenreController::class,
+    'banks' => BankController::class,
+    'artists' => ArtistController::class
+]);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
