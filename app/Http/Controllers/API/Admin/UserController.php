@@ -9,7 +9,6 @@ use App\Http\Resources\UserCollection;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Error;
-use Illuminate\Http\Request;
 
 class UserController extends Controller
 {

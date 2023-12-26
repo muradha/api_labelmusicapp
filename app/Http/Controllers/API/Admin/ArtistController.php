@@ -9,7 +9,7 @@ use App\Http\Resources\ArtistCollection;
 use App\Http\Resources\ArtistResource;
 use App\Models\Artist;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 
 class ArtistController extends Controller
 {
@@ -29,6 +29,11 @@ class ArtistController extends Controller
     public function store(StoreArtistRequest $request)
     {
         $data = $request->validated();
+
+        if ($request->hasFile('photo')) {
+            $path = $request->file('photo')->store('artists', 'public');
+            $data['photo'] = $path;
+        }
 
         $artist = Artist::create($data);
 
@@ -56,19 +61,19 @@ class ArtistController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateArtistRequest $request, string $id)
+    public function update(UpdateArtistRequest $request, Artist $artist)
     {
-        $artist = Artist::where('id', $id)->first();
-
-        if (empty($artist)) {
-            throw new HttpResponseException(response()->json([
-                'errors' => [
-                    'message' => 'Artist not found'
-                ],
-            ], 404));
-        }
-
         $data = $request->validated();
+
+        if ($request->hasFile(('photo'))) {
+            if (!empty($artist->photo) && Storage::disk('public')->exists($artist->photo)) {
+                Storage::disk('public')->delete($artist->photo);
+            }
+            $path = $request->file('photo')->store('artists', 'public');
+            $data['photo'] = $path;
+        } else {
+            $data['photo'] = $artist->photo;
+        }
 
         $isSuccess = $artist->update($data);
 
@@ -86,22 +91,14 @@ class ArtistController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Artist $artist)
     {
-        $artist = Artist::where('id', $id)->first();
-
-        if (empty($artist)) {
-            throw new HttpResponseException(response()->json([
-                'errors' => [
-                    'message' => 'Artist not found'
-                ],
-            ], 404));
+        if (!empty($artist->photo) && Storage::disk('public')->exists($artist->photo)) {
+            Storage::disk('public')->delete($artist->photo);
         }
 
         $artist->delete();
 
-        return response()->json([
-            'success' => true
-        ], 200);
+        return new ArtistResource($artist);
     }
 }
