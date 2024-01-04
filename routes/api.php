@@ -5,6 +5,7 @@ use App\Http\Controllers\API\Admin\GenreController;
 use App\Http\Controllers\API\Admin\UserController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BankController;
+use App\Http\Controllers\API\DistributionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,7 +27,8 @@ Route::apiResources([
     'users' => UserController::class,
     'genres' => GenreController::class,
     'banks' => BankController::class,
-    'artists' => ArtistController::class
+    'artists' => ArtistController::class,
+    'distributions' => DistributionController::class
 ]);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

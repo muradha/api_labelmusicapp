@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('artists_genres_pivot', function (Blueprint $table) {
+        Schema::create('artist_social_medias', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('artist_id');
             $table->foreign('artist_id')->references('id')->on('artists')->onDelete('cascade');
-            $table->unsignedBigInteger('genre_id');
-            $table->foreign('genre_id')->references('id')->on('genres')->onDelete('cascade');
+            $table->unsignedBigInteger('social_media_id');
+            $table->foreign('social_media_id')->references('id')->on('social_medias')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('artists_genres_pivot');
+        Schema::dropIfExists('artist_social_medias');
     }
 };

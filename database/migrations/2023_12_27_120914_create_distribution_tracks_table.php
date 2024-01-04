@@ -11,13 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('artists', function (Blueprint $table) {
+        Schema::create('distribution_tracks', function (Blueprint $table) {
             $table->id();
-            $table->string('first_name', 50);
-            $table->string('last_name', 50);
-            $table->string('email');
-            $table->string('photo');
-            $table->string('country', 100)->nullable();
+            $table->foreignId('distribution_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('track_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });
     }
@@ -27,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('artists');
+        Schema::dropIfExists('distribution_tracks');
     }
 };
