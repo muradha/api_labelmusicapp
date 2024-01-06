@@ -25,8 +25,8 @@ class UpdateBankRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:100', Rule::unique('banks', 'name')->ignore($this->id)],
-            'bank_code' => ['required', 'string', 'max:50', Rule::unique('banks', 'bank_code')->ignore($this->id)]
+            'name' => ['required', 'string', 'max:100', Rule::unique('banks', 'name')->ignore($this->bank)],
+            'bank_code' => ['required', 'string', 'max:50', Rule::unique('banks', 'bank_code')->ignore($this->bank)]
         ];
     }
 

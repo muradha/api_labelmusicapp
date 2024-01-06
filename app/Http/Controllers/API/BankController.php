@@ -38,11 +38,9 @@ class BankController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Bank $bank)
     {
-        $data = Bank::where('id', $id)->first();
-
-        if (empty($data)) {
+        if (empty($bank)) {
             throw new HttpResponseException(response()->json([
                 'errors' => [
                     'message' => 'Bank not found'
@@ -50,16 +48,14 @@ class BankController extends Controller
             ], 404));
         }
 
-        return (new BankResource($data))->response()->setStatusCode(200);
+        return (new BankResource($bnak))->response()->setStatusCode(200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateBankRequest $request, string $id)
+    public function update(UpdateBankRequest $request, Bank $bank)
     {
-        $bank = Bank::where('id', $id)->first();
-
         if (empty($bank)) {
             throw new HttpResponseException(response()->json([
                 'errors' => [
@@ -80,18 +76,14 @@ class BankController extends Controller
             ], 500));
         }
 
-        $updatedBank = Bank::where('id', $id)->first();
-
-        return new BankResource($updatedBank);
+        return new BankResource($bank);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Bank $bank)
     {
-        $bank = Bank::where('id', $id)->first();
-
         if (empty($bank)) {
             throw new HttpResponseException(response()->json([
                 'errors' => [
@@ -102,8 +94,6 @@ class BankController extends Controller
 
         $bank->delete();
 
-        return response()->json([
-            'success' => true
-        ], 200);
+        return new BankResource($bank);
     }
 }

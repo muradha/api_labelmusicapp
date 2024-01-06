@@ -38,10 +38,8 @@ class GenreController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Genre $genre)
     {
-        $genre = Genre::where('id', $id)->first();
-
         if (empty($genre)) {
             throw new HttpResponseException(response()->json([
                 'errors' => [
@@ -56,10 +54,8 @@ class GenreController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateGenreRequest $request, string $id)
+    public function update(UpdateGenreRequest $request, Genre $genre)
     {
-        $genre = Genre::where('id', $id)->first();
-
         if (empty($genre)) {
             throw new HttpResponseException(response()->json([
                 'errors' => [
@@ -85,10 +81,8 @@ class GenreController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Genre $genre)
     {
-        $genre = Genre::where('id', $id)->first();
-
         if (empty($genre)) {
             throw new HttpResponseException(response()->json([
                 'errors' => [
@@ -99,8 +93,6 @@ class GenreController extends Controller
 
         $genre->delete();
 
-        return response()->json([
-            'success' => true
-        ], 200);
+        return new GenreResource($genre);
     }
 }
