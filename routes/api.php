@@ -6,6 +6,7 @@ use App\Http\Controllers\API\Admin\UserController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BankController;
 use App\Http\Controllers\API\DistributionController;
+use App\Http\Controllers\API\TrackController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::apiResource('tracks', TrackController::class);
+Route::apiResource('distributions', DistributionController::class);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResources([
@@ -29,7 +32,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'genres' => GenreController::class,
         'banks' => BankController::class,
         'artists' => ArtistController::class,
-        'distributions' => DistributionController::class
     ]);
 });
 
