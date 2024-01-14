@@ -7,8 +7,10 @@ use App\Http\Requests\API\UserLoginRequest;
 use App\Http\Requests\API\UserRegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 
@@ -44,5 +46,12 @@ class AuthController extends Controller
         $user->token = $user->createToken('auth_token')->plainTextToken;
 
         return (new UserResource($user));
+    }
+
+    public function logout() {
+        $user = Auth::user();
+        $user->tokens()->delete();
+
+        return response()->json(['message' => 'Logged out successfully']);
     }
 }

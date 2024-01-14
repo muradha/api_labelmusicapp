@@ -15,4 +15,8 @@ class Track extends Model
     public function distributions(): BelongsToMany {
         return $this->belongsToMany(Distribution::class, 'distribution_tracks');
     }
+
+    public function platforms(): BelongsToMany{
+        return $this->belongsToMany(Platform::class, 'track_platform');
+    }
 }

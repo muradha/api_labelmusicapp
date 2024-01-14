@@ -6,6 +6,8 @@ use App\Http\Controllers\API\Admin\UserController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BankController;
 use App\Http\Controllers\API\DistributionController;
+use App\Http\Controllers\API\MusicStoreController;
+use App\Http\Controllers\API\PlatformController;
 use App\Http\Controllers\API\TrackController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -25,8 +27,11 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::apiResource('tracks', TrackController::class);
 Route::apiResource('distributions', DistributionController::class);
+Route::apiResource('platforms', PlatformController::class);
+Route::apiResource('stores', MusicStoreController::class);
 
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
     Route::apiResources([
         'users' => UserController::class,
         'genres' => GenreController::class,

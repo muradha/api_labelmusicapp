@@ -17,7 +17,7 @@ class DistributionController extends Controller
      */
     public function index(): DistributionCollection
     {
-        $distributions = Distribution::with('artist')->get();
+        $distributions = Distribution::with(['artist', 'tracks'])->get();
 
         return new DistributionCollection($distributions);
     }

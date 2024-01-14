@@ -7,6 +7,7 @@ use App\Http\Requests\API\Tracks\StoreTrackRequest;
 use App\Http\Requests\API\Tracks\UpdateTrackRequest;
 use App\Http\Resources\TrackCollection;
 use App\Http\Resources\TrackResource;
+use App\Models\Distribution;
 use App\Models\Track;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
@@ -31,8 +32,18 @@ class TrackController extends Controller
     {
         $data = $request->validated();
 
-        if($request->hasFile('file')) {
-            $data['file'] = $request->file('file')->store('tracks', 'public');
+        $distribution = Distribution::with('tracks')->findOrFail($data['distribution_id']);
+
+        if($distribution->tracks->count() >= 1 && $distribution->release_type === 'SINGLE'){
+            throw new HttpResponseException(response()->json([
+                'errors' => [
+                    'message' => 'Track already exists in distribution'
+                ],
+            ], 404));
+        }
+
+        if ($request->hasFile('release_file')) {
+            $data['file'] = $request->file('release_file')->store('tracks', 'public');
         }
 
         $data['ISRC'] = rand(100000000000000, 999999999999999);
@@ -58,12 +69,12 @@ class TrackController extends Controller
     {
         $data = $request->validated();
 
-        if($request->hasFile('file')) {
-            if($track->file && Storage::disk('public')->exists($track->file)){
+        if ($request->hasFile('release_file')) {
+            if ($track->file && Storage::disk('public')->exists($track->file)) {
                 Storage::disk('public')->delete($track->file);
             }
-            $data['file'] = $request->file('file')->store('tracks', 'public');
-        }else{
+            $data['file'] = $request->file('release_file')->store('tracks', 'public');
+        } else {
             $data['file'] = $track->file;
         }
 

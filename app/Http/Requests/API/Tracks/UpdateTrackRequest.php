@@ -24,7 +24,7 @@ class UpdateTrackRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:250', Rule::unique('tracks', 'title')->ignore($this->track)],
-            'file' => 'nullable|file|mimes:wav,mp3|max:2048',
+            'release_file' => 'nullable|file|mimes:wav,mp3|max:2048',
             'version' => 'required|string|max:200',
             'vocal' => 'nullable|in:YES,NO',
             'preview' => 'nullable|numeric',

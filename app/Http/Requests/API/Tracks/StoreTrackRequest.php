@@ -23,13 +23,13 @@ class StoreTrackRequest extends FormRequest
     {
         return [
             'title' => 'required|string|max:250|unique:tracks,title',
-            'file' => 'required|file|mimes:wav,mp3|max:2048',
+            'release_file' => 'required|file|mimes:wav,mp3|max:2048',
             'version' => 'required|string|max:200',
             'vocal' => 'nullable|in:YES,NO',
             'preview' => 'nullable|numeric',
             'lyric_language' => 'nullable|string|max:200',
             'size' => 'nullable|numeric',
-            'distribution_id' => 'required|numeric|exists:distributions,id',
+            'distribution_id' => 'nullable|numeric|exists:distributions,id',
         ];
     }
 }
