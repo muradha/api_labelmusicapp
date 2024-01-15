@@ -1,13 +1,12 @@
 <?php
 
-namespace App\Http\Requests\API\Admin\Genre;
+namespace App\Http\Requests\API\Genre;
 
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Validation\Rule;
 
-class UpdateGenreRequest extends FormRequest
+class StoreGenreRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,7 +24,7 @@ class UpdateGenreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required','string','max:100', Rule::unique('genres', 'name')->ignore($this->id)]
+            'name' => 'required|string|min:5|max:100|unique:genres,name',
         ];
     }
 

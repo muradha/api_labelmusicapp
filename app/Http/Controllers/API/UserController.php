@@ -1,23 +1,29 @@
 <?php
 
-namespace App\Http\Controllers\API\Admin;
+namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\API\Admin\StoreUserRequest;
-use App\Http\Requests\API\Admin\UpdateUserRequest;
+use App\Http\Requests\API\StoreUserRequest;
+use App\Http\Requests\API\UpdateUserRequest;
 use App\Http\Resources\UserCollection;
 use App\Http\Resources\UserResource;
 use App\Models\User;
-use Error;
 
 class UserController extends Controller
 {
+     /**
+     * Create the controller instance.
+     */
+    public function __construct()
+    {
+        $this->authorizeResource(User::class, 'user');
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $users = User::all();
+        $users = User::whereHas('roles', fn ($query) => $query->where('name', 'user'))->get();
 
         return new UserCollection($users);
     }
@@ -30,6 +36,7 @@ class UserController extends Controller
         $data = $request->validated();
 
         $user = User::create($data);
+        $user->assignRole('user');
 
         return new UserResource($user);
     }
@@ -47,15 +54,11 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, User $user)
     {
-        try {
-            $data = $request->validated();
+        $data = $request->validated();
 
-            $updatedUser = $user->update($data);
-    
-            return new UserResource($user);
-        } catch (\Throwable $th) {
-            throw new Error($th->getMessage());
-        }
+        $user->update($data);
+
+        return new UserResource($user);
     }
 
     /**

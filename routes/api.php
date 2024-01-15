@@ -1,8 +1,9 @@
 <?php
 
-use App\Http\Controllers\API\Admin\ArtistController;
-use App\Http\Controllers\API\Admin\GenreController;
-use App\Http\Controllers\API\Admin\UserController;
+use App\Http\Controllers\API\AdminController;
+use App\Http\Controllers\API\ArtistController;
+use App\Http\Controllers\API\GenreController;
+use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BankController;
 use App\Http\Controllers\API\DistributionController;
@@ -29,6 +30,7 @@ Route::apiResource('tracks', TrackController::class);
 Route::apiResource('distributions', DistributionController::class);
 Route::apiResource('platforms', PlatformController::class);
 Route::apiResource('stores', MusicStoreController::class);
+Route::apiResource('admins', AdminController::class);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

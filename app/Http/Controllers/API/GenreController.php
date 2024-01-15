@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\API\Admin;
+namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\API\Admin\Genre\StoreGenreRequest;
-use App\Http\Requests\API\Admin\Genre\UpdateGenreRequest;
+use App\Http\Requests\API\Genre\StoreGenreRequest;
+use App\Http\Requests\API\Genre\UpdateGenreRequest;
 use App\Http\Resources\GenreCollection;
 use App\Http\Resources\GenreResource;
 use App\Models\Genre;
