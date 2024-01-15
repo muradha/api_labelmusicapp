@@ -21,6 +21,7 @@ return new class extends Migration
             $table->integer('preview')->unsigned()->nullable();
             $table->string('lyric_language', 200)->nullable();
             $table->integer('size')->unsigned()->nullable();
+            $table->foreignId('distribution_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });
     }

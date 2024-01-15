@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Track extends Model
@@ -12,8 +13,8 @@ class Track extends Model
 
     protected $guarded = ['id'];
 
-    public function distributions(): BelongsToMany {
-        return $this->belongsToMany(Distribution::class, 'distribution_tracks');
+    public function distribution(): BelongsTo {
+        return $this->belongsTo(Distribution::class);
     }
 
     public function platforms(): BelongsToMany{

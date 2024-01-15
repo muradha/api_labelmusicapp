@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('track_authors', function (Blueprint $table) {
+        Schema::create('contributors', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('track_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
-            $table->foreignId('author_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
+            $table->string('name', 250);
+            $table->foreignId('track_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('track_authors');
+        Schema::dropIfExists('contributors');
     }
 };

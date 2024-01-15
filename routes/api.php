@@ -26,20 +26,22 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::apiResource('tracks', TrackController::class);
-Route::apiResource('distributions', DistributionController::class);
 Route::apiResource('platforms', PlatformController::class);
 Route::apiResource('stores', MusicStoreController::class);
 Route::apiResource('admins', AdminController::class);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::apiResources([
-        'users' => UserController::class,
-        'genres' => GenreController::class,
-        'banks' => BankController::class,
-        'artists' => ArtistController::class,
-    ]);
+    Route::apiResource('tracks', TrackController::class);
+    Route::apiResource('distributions', DistributionController::class);
+    Route::group(['middleware' => ['role:admin']], function () {
+        Route::apiResources([
+            'users' => UserController::class,
+            'genres' => GenreController::class,
+            'banks' => BankController::class,
+            'artists' => ArtistController::class,
+        ]);
+    });
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

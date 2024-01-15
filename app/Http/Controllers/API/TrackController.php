@@ -15,6 +15,13 @@ use Illuminate\Support\Facades\Storage;
 
 class TrackController extends Controller
 {
+     /**
+     * Create the controller instance.
+     */
+    public function __construct()
+    {
+        $this->authorizeResource(Track::class, 'track');
+    }
     /**
      * Display a listing of the resource.
      */
@@ -49,7 +56,6 @@ class TrackController extends Controller
         $data['ISRC'] = rand(100000000000000, 999999999999999);
 
         $track = Track::create($data);
-        $track->distributions()->attach($data['distribution_id']);
 
         return (new TrackResource($track))->response()->setStatusCode(201);
     }

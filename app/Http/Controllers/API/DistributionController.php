@@ -13,6 +13,13 @@ use Illuminate\Http\Request;
 class DistributionController extends Controller
 {
     /**
+     * Create the controller instance.
+     */
+    public function __construct()
+    {
+        $this->authorizeResource(Distribution::class, 'distribution');
+    }
+    /**
      * Display a listing of the resource.
      */
     public function index(): DistributionCollection

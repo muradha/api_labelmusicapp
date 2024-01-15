@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('authors', function (Blueprint $table) {
             $table->id();
             $table->string('name', 250);
-            $table->timestamps();
+            $table->foreignId('track_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
         });
     }
 
