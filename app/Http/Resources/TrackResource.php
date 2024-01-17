@@ -19,13 +19,19 @@ class TrackResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'file' => $this->file,
-            'isrc' => $this->isrc,
+            'isrc' => $this->ISRC,
             'file_url' => Storage::disk('public')->url($this->file),
             'version' => $this->version,
             'vocal' => $this->vocal,
             'preview' => $this->preview,
             'lyric_language' => $this->lyric_language,
             'size' => $this->size,
+            'authors' => $this->authors,
+            'producers' => $this->producers,
+            'contributors' => $this->contributors,
+            'composers' => $this->composers,
+            'featurings' => $this->featurings,
+            'music_stores' => $this->whenLoaded('musicStores', fn () => $this->musicStores->pluck('id')->toArray()),
         ];
     }
 }

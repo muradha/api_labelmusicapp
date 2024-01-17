@@ -30,6 +30,18 @@ class StoreTrackRequest extends FormRequest
             'lyric_language' => 'nullable|string|max:200',
             'size' => 'nullable|numeric',
             'distribution_id' => 'nullable|numeric|exists:distributions,id',
+            'music_stores' => 'nullable|array',
+            'music_stores.*' => 'numeric|exists:music_stores,id',
+            'authors' => 'required|array',
+            'authors.*.name' => 'string|max:250',
+            'featurings' => 'required|array',
+            'featurings.*.name' => 'string|max:250',
+            'contributors' => 'required|array',
+            'contributors.*.name' => 'string|max:250',
+            'producers' => 'required|array',
+            'producers.*.name' => 'string|max:250',
+            'composers' => 'required|array',
+            'composers.*.name' => 'string|max:250',
         ];
     }
 }
