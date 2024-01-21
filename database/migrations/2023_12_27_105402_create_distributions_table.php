@@ -22,9 +22,9 @@ return new class extends Migration
             $table->string('UPC')->nullable();
             $table->string('cover')->nullable();
             $table->string('country', 100)->nullable();
-            $table->string('copyright', 250)->nullable();
+            $table->string('copyright', 250)->nullable()->default('labelmiraclestudioapps');
             $table->year('copyright_year')->nullable();
-            $table->string('publisher', 100)->nullable()->default('text');
+            $table->string('publisher', 100)->nullable()->default('labelmiraclestudioapps');
             $table->year('publisher_year')->nullable();
             $table->string('label', 250)->nullable();
             $table->tinyInteger('submit_status', false, false)->default(0);

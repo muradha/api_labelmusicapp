@@ -24,7 +24,7 @@ class UpdateAnalyticRequest extends FormRequest
         return [
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
-            'artist_id' => 'required|numeric|exists:artists,id'
+            'artist_id' => 'nullable|numeric|exists:artists,id'
         ];
     }
 }

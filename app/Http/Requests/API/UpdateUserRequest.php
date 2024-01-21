@@ -4,6 +4,7 @@ namespace App\Http\Requests\API;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UpdateUserRequest extends FormRequest
 {
@@ -28,7 +29,7 @@ class UpdateUserRequest extends FormRequest
                 'required', 'email',
                 Rule::unique('users', 'email')->ignore($this->user)
             ],
-            'password' => 'nullable|string|max:254',
+            'password' => ['nullable', Password::defaults()],
         ];
     }
 }

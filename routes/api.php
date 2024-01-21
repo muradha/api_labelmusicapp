@@ -10,6 +10,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BankController;
 use App\Http\Controllers\API\DistributionController;
 use App\Http\Controllers\API\MusicStoreController;
+use App\Http\Controllers\API\OperatorController;
 use App\Http\Controllers\API\PlatformController;
 use App\Http\Controllers\API\TrackController;
 use App\Http\Controllers\API\TransactionController;
@@ -37,15 +38,26 @@ Route::apiResource('transactions', TransactionController::class);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::apiResource('tracks', TrackController::class);
-    Route::apiResource('distributions', DistributionController::class);
-    Route::apiResource('analytics', AnalyticController::class);
+    
+    Route::apiResources([
+        'tracks' => TrackController::class,
+        'distributions' => DistributionController::class,
+        'analytics' => AnalyticController::class,
+    ]);
+
     Route::group(['middleware' => ['role:admin']], function () {
         Route::apiResources([
             'users' => UserController::class,
             'genres' => GenreController::class,
             'banks' => BankController::class,
             'artists' => ArtistController::class,
+            'operators' => OperatorController::class,
+        ]);
+    });
+    
+    Route::group(['middleware' => ['role:admin|operator']], function () {
+        Route::apiResources([
+            'operators' => OperatorController::class,
         ]);
     });
 });

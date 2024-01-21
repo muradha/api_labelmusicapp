@@ -9,6 +9,7 @@ use App\Http\Resources\DistributionCollection;
 use App\Http\Resources\DistributionResource;
 use App\Models\Distribution;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DistributionController extends Controller
 {
@@ -39,7 +40,10 @@ class DistributionController extends Controller
         if ($request->hasFile('cover')) {
             $data['cover'] = $request->file('cover')->store('cover', 'public');
         }
-        $data['UPC'] = rand(1000000000000, 9999999999999);
+
+        $data['upc'] = $data['upc'] ?? rand(1000000000000, 9999999999999);
+
+        $data['user_id'] = Auth::user()->id;
         
         $distribution = Distribution::create($data);
 
@@ -59,7 +63,15 @@ class DistributionController extends Controller
      */
     public function update(UpdateDistributionRequest $request, Distribution $distribution)
     {
-        $distribution->update($request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('cover')) {
+            $data['cover'] = $request->file('cover')->store('cover', 'public');
+        }else{
+            $data['cover'] = $distribution->cover;
+        }
+
+        $distribution->update($data);
 
         return new DistributionResource($distribution);
     }

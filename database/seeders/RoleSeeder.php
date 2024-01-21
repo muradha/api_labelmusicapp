@@ -13,7 +13,10 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        $roles =  ['user', 'admin'];
+        // Reset cached roles and permissions
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        $roles =  ['user', 'admin', 'operator'];
 
         foreach ($roles as $value) {
             Role::firstOrCreate(['name' => $value],['name' => $value]);

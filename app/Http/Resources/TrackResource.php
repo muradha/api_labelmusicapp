@@ -15,12 +15,14 @@ class TrackResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $file_url = $this->file && Storage::disk('public')->exists($this->file) ? Storage::disk('public')->url($this->file) : null;
+
         return [
             'id' => $this->id,
             'title' => $this->title,
             'file' => $this->file,
             'isrc' => $this->ISRC,
-            'file_url' => Storage::disk('public')->url($this->file),
+            'file_url' => $file_url,
             'version' => $this->version,
             'vocal' => $this->vocal,
             'preview' => $this->preview,

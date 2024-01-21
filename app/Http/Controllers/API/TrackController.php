@@ -143,7 +143,6 @@ class TrackController extends Controller
                 Composer::upsert($composers, ['id', 'track_id'], ['name']);
             }
         }
-        
         if(empty($data['music_stores'])) {
             $data['music_stores'] = [];
         }

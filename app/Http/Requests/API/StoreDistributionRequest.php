@@ -27,17 +27,41 @@ class StoreDistributionRequest extends FormRequest
             'language_title' => 'nullable|string|max:200',
             'release_type' => 'required|string|in:SINGLE,ALBUM',
             'release_date' => 'required|date',
+            'upc' => 'required|numeric|unique:distributions,upc',
             'release_date_original' => 'nullable|date',
             'explicit_content' => 'required|boolean',
-            'cover' => 'nullable|image|max:2048',
+            'cover' => 'required|image|max:2048',
             'country' => 'nullable|string|max:100',
             'copyright' => 'nullable|string|max:250',
-            'copyright_year' => 'nullable',
+            'copyright_year' => 'nullable|numeric|between:1900,2100',
             'publisher' => 'nullable|string|max:250',
-            'publisher_year' => 'nullable',
+            'publisher_year' => 'nullable|numeric|between:1900,2100',
             'label' => 'nullable|string|max:250',
             'description' => 'nullable|string|max:2000',
             'artist_id' => 'nullable|numeric|exists:artists,id',
         ];
+    }
+
+     /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'explicit_content' => $this->toBoolean($this->explicit_content),
+        ]);
+    }
+
+    /**
+     * Convert to boolean
+     *
+     * @param $booleable
+     * @return boolean
+     */
+    private function toBoolean($booleable)
+    {
+        return filter_var($booleable, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
     }
 }
