@@ -8,7 +8,7 @@ use App\Http\Requests\API\Transactions\UpdateTransactionRequest;
 use App\Http\Resources\TransactionCollection;
 use App\Http\Resources\TransactionResource;
 use App\Models\Transaction;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TransactionController extends Controller
 {
@@ -30,6 +30,7 @@ class TransactionController extends Controller
         $data = $request->validated();
 
         $transaction = Transaction::create($data);
+        $user = Auth::user();
 
         return new TransactionResource($transaction);
     }

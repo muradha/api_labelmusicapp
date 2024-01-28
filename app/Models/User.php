@@ -26,6 +26,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'last_login_time',
+        'last_login_ip',
     ];
 
     /**
@@ -54,5 +56,9 @@ class User extends Authenticatable
     
     public function account() : HasOne {
         return $this->hasOne(Account::class);
+    }
+
+    public function artists() : HasMany {
+        return $this->hasMany(Artist::class);
     }
 }

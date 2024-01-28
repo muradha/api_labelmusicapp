@@ -8,10 +8,14 @@ use App\Http\Requests\API\UpdateUserRequest;
 use App\Http\Resources\UserCollection;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
-     /**
+    /**
      * Create the controller instance.
      */
     public function __construct()
@@ -56,7 +60,7 @@ class UserController extends Controller
     {
         $data = $request->validated();
 
-        if(empty($data['password'])) unset($data['password']);
+        if (empty($data['password'])) unset($data['password']);
 
         $user->update($data);
 
@@ -71,5 +75,53 @@ class UserController extends Controller
         $user->delete();
 
         return new UserResource($user);
+    }
+
+    public function getUsersWithLog()
+    {
+        $users = User::whereNotNull('last_login_time')->whereNotNull('last_login_ip')->get();
+
+        return response()->json([
+            'data' => $users,
+        ]);
+    }
+
+    public function unreadNotification()
+    {
+        $notifications = Auth::user()->unreadNotifications->first();
+
+        $data = [];
+        if ($notifications) {
+            $data = [
+                'id' => $notifications->id,
+                'title' => $notifications->data['title'],
+                'content' => $notifications->data['content'],
+            ];
+        }
+
+        return response()->json([
+            'data' => $data
+        ]);
+    }
+
+    public function readNotification(Request $request)
+    {
+        $data = $request->validate([
+            'id' => 'required|exists:notifications,id',
+        ]);
+
+        $notification = DB::table('notifications')->where('id', $data['id'])->limit(1);
+
+        if (!($notification->exists())) {
+            throw new HttpResponseException(response()->json([
+                'message' => 'Notification not found'
+            ], 404));
+        }
+
+        $notification->update(['read_at' => now()]);
+
+        return response()->json([
+            'message' => 'Read announcement successfully',
+        ]);
     }
 }

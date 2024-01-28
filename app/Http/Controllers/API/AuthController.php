@@ -34,7 +34,9 @@ class AuthController extends Controller
 
         $user = User::with('roles')->where('email', $data['email'])->first();
 
-        if (!$user || !Hash::check($data['password'], $user->password)) {
+        if (Auth::attempt($data)) {
+            $user->token = $user->createToken('auth_token')->plainTextToken;
+        } else {
             throw new HttpResponseException(response()->json([
                 'errors' => [
                     'message' => 'User not found'
@@ -42,13 +44,11 @@ class AuthController extends Controller
             ], 401));
         }
 
-
-        $user->token = $user->createToken('auth_token')->plainTextToken;
-
         return (new UserResource($user));
     }
 
-    public function logout() {
+    public function logout()
+    {
         $user = Auth::user();
         $user->tokens()->delete();
 

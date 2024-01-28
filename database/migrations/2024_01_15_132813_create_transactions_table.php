@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
+            $table->date('period');
             $table->integer('income')->default(0);
             $table->integer('pay')->default(0);
             $table->dateTime('create_time')->default(now());

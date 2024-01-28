@@ -16,9 +16,19 @@ class AnalyticResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'start_date' => $this->start_date,
-            'end_date' => $this->end_date,
-            'artist' => ArtistResource::make($this->artist),
+            'period' => $this->period,
+            'artist' => ArtistResource::make($this->whenLoaded('artist')),
+            'total_revenue' => $this->whenLoaded('stores', function() {
+                return $this->stores->sum('pivot.revenue');
+            }),
+            'total_streaming' => $this->whenLoaded('stores', function() {
+                return $this->stores->sum('pivot.streaming');
+            }),
+            'total_download' => $this->whenLoaded('stores', function() {
+                return $this->stores->sum('pivot.download');
+            }),
+            'shops' => MusicStoreResource::collection($this->whenLoaded('stores')),
+            'artists' => ArtistResource::collection($this->whenLoaded('artists')),
         ];
     }
 }

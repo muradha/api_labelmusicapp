@@ -26,7 +26,7 @@ class DistributionResource extends JsonResource
             'release_date_original' => $this->release_date_original,
             'explicit_content' => $this->explicit_content,
             'UPC' => $this->UPC,
-            'cover' => $this->cover,
+            'cover' => Storage::disk('public')->url($this->cover),
             'cover_url' => $cover_url,
             'country' => $this->country,
             'copyright' => $this->copyright,

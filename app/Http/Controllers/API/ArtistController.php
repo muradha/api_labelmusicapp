@@ -9,16 +9,26 @@ use App\Http\Resources\ArtistCollection;
 use App\Http\Resources\ArtistResource;
 use App\Models\Artist;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class ArtistController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Artist::class, 'artist');    
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $artists = Artist::all();
+        $user = Auth::user();
+        if ($user->hasAnyRole('admin', 'operator')) {
+            $artists = Artist::all();
+        }else{
+            $artists = $user->artists()->get();
+        }
 
         return (new ArtistCollection($artists))->response()->setStatusCode(200);
     }
@@ -43,19 +53,9 @@ class ArtistController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $artist)
+    public function show(Artist $artist)
     {
-        $data = Artist::where('id', $artist)->first();
-
-        if (empty($data)) {
-            throw new HttpResponseException(response()->json([
-                'errors' => [
-                    'message' => 'Artist not found'
-                ],
-            ], 404));
-        }
-
-        return (new ArtistResource($data))->response()->setStatusCode(200);
+        return (new ArtistResource($artist))->response()->setStatusCode(200);
     }
 
     /**

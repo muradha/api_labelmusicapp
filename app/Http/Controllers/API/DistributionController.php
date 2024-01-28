@@ -8,7 +8,6 @@ use App\Http\Requests\API\UpdateDistributionRequest;
 use App\Http\Resources\DistributionCollection;
 use App\Http\Resources\DistributionResource;
 use App\Models\Distribution;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DistributionController extends Controller
@@ -25,7 +24,13 @@ class DistributionController extends Controller
      */
     public function index(): DistributionCollection
     {
-        $distributions = Distribution::with(['artist', 'tracks'])->get();
+        $user = Auth::user();
+
+        if($user->hasAnyRole('admin', 'operator')) {
+            $distributions = Distribution::with(['artist', 'tracks'])->get();
+        } else {
+            $distributions = $user->distributions()->with(['artist', 'tracks'])->get();
+        }
 
         return new DistributionCollection($distributions);
     }

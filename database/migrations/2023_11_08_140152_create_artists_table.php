@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('email');
             $table->string('photo');
             $table->string('country', 100)->nullable();
+            $table->foreignId('user_id')->constrained()->onUpdate('cascade')->onDelete('restrict');
             $table->timestamps();
         });
     }

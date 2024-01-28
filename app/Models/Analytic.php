@@ -12,13 +12,18 @@ class Analytic extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'period' => 'date:Y-m-d',
+    ];
+
     public function stores()
     {
         return $this->belongsToMany(MusicStore::class, 'analytic_store', 'analytic_id', 'music_store_id')
             ->withPivot(['revenue', 'streaming', 'download'])->withTimestamps();
     }
 
-    public function artist() : BelongsTo {
+    public function artist(): BelongsTo
+    {
         return $this->belongsTo(Artist::class, 'artist_id');
     }
 }

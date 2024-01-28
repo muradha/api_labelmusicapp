@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\AccountController;
 use App\Http\Controllers\API\AdminController;
 use App\Http\Controllers\API\AnalyticController;
+use App\Http\Controllers\API\AnnouncementController;
 use App\Http\Controllers\API\ArtistController;
 use App\Http\Controllers\API\GenreController;
 use App\Http\Controllers\API\UserController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\API\PlatformController;
 use App\Http\Controllers\API\TrackController;
 use App\Http\Controllers\API\TransactionController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -35,8 +37,13 @@ Route::apiResource('stores', MusicStoreController::class);
 Route::apiResource('admins', AdminController::class);
 Route::apiResource('accounts', AccountController::class);
 Route::apiResource('transactions', TransactionController::class);
+Route::get('announcements', [AnnouncementController::class, 'index']);
+Route::post('announcements', [AnnouncementController::class, 'store']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('users/notification', [UserController::class, 'unreadNotification']);
+    Route::post('users/notification', [UserController::class, 'readNotification']);
+
     Route::post('/logout', [AuthController::class, 'logout']);
     
     Route::apiResources([
@@ -45,21 +52,30 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'analytics' => AnalyticController::class,
     ]);
 
+    Route::get('analytics/{period}/artist/{artist}', [AnalyticController::class, 'showByPeriodAndArtist']);
+
+    Route::group(['middleware' => ['role:user|admin']], function () {
+        Route::apiResources([
+            'artists' => ArtistController::class,
+        ]);
+    });
+
     Route::group(['middleware' => ['role:admin']], function () {
+        Route::get('/users/log', [UserController::class, 'getUsersWithLog']);
         Route::apiResources([
             'users' => UserController::class,
             'genres' => GenreController::class,
             'banks' => BankController::class,
-            'artists' => ArtistController::class,
             'operators' => OperatorController::class,
         ]);
     });
+
     
-    Route::group(['middleware' => ['role:admin|operator']], function () {
-        Route::apiResources([
-            'operators' => OperatorController::class,
-        ]);
-    });
+    // Route::group(['middleware' => ['role:admin|operator']], function () {
+    //     Route::apiResources([
+    //         'operators' => OperatorController::class,
+    //     ]);
+    // });
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

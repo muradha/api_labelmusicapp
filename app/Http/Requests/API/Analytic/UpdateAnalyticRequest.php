@@ -22,9 +22,14 @@ class UpdateAnalyticRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
-            'artist_id' => 'nullable|numeric|exists:artists,id'
+            'period' => 'required|date',
+            'user_id' => 'sometimes|numeric|exists:users,id',
+            'artist_id' => 'required|numeric|exists:artists,id',
+            'shops.*' => 'required|array',
+            'shops.*.revenue' => 'required|numeric|max_digits:10',
+            'shops.*.streaming' => 'required|numeric|max_digits:10',
+            'shops.*.download' => 'required|numeric|max_digits:10',
+            'shops.*.music_store_id' => 'required|numeric|exists:music_stores,id',
         ];
     }
 }
