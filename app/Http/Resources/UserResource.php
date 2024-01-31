@@ -20,6 +20,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'roles' => RoleResource::collection($this->whenLoaded('roles')),
             'token' => $this->whenNotNull($this->token),
+            'email_verified_at' => $this->email_verified_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

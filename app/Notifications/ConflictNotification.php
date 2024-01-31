@@ -4,21 +4,19 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TestNotification extends Notification implements ShouldQueue
+class ConflictNotification extends Notification
 {
     use Queueable;
-
-
-    private $data;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($data)
+    public function __construct(protected $message, protected $conflict_type)
     {
-
+        
     }
 
     /**
@@ -39,8 +37,8 @@ class TestNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => $this->data['title'],
-            'content' => $this->data['content']
+            'message' => $this->message,
+            'conflict_type' => $this->conflict_type,
         ];
     }
 }

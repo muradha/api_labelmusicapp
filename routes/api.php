@@ -9,14 +9,17 @@ use App\Http\Controllers\API\GenreController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BankController;
+use App\Http\Controllers\API\BankWithdrawController;
 use App\Http\Controllers\API\DistributionController;
+use App\Http\Controllers\API\LegalController;
 use App\Http\Controllers\API\MusicStoreController;
 use App\Http\Controllers\API\OperatorController;
+use App\Http\Controllers\API\PaypalWithdrawController;
 use App\Http\Controllers\API\PlatformController;
 use App\Http\Controllers\API\TrackController;
 use App\Http\Controllers\API\TransactionController;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -39,8 +42,21 @@ Route::apiResource('accounts', AccountController::class);
 Route::apiResource('transactions', TransactionController::class);
 Route::get('announcements', [AnnouncementController::class, 'index']);
 Route::post('announcements', [AnnouncementController::class, 'store']);
+Route::get('withdraw/paypal', [PaypalWithdrawController::class, 'index']);
+Route::post('withdraw/paypal', [PaypalWithdrawController::class, 'store']);
+Route::post('withdraw/bank', [BankWithdrawController::class, 'store']);
+Route::apiResource('legals', LegalController::class);
+
+Route::get('test', function () {
+    $user= User::find(10);
+
+    $user->sendEmailVerificationNotification();
+}); 
+
 
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/email/verify', [AuthController::class, 'notice'])->name('verification.notice');
+    Route::post('/email/verification-notification', [AuthController::class, 'resend'])->middleware(['throttle:6,1'])->name('verification.send');
     Route::get('users/notification', [UserController::class, 'unreadNotification']);
     Route::post('users/notification', [UserController::class, 'readNotification']);
 
