@@ -4,12 +4,10 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Withdraws\StorePaypalWithdrawRequest;
-use App\Http\Resources\PaypalWithdrawCollection;
-use App\Http\Resources\WithdrawCollection;
-use App\Http\Resources\WithdrawResource;
+use App\Http\Resources\Withdraws\PaypalWithdrawCollection;
+use App\Http\Resources\Withdraws\PaypalWithdrawResource;
 use App\Models\PaypalWithdraw;
 use App\Models\Withdraw;
-use Illuminate\Http\Request;
 
 class PaypalWithdrawController extends Controller
 {
@@ -18,9 +16,9 @@ class PaypalWithdrawController extends Controller
      */
     public function index()
     {
-        $withdrawals = Withdraw::with('withdrawable')->get();
+        $withdrawals = PaypalWithdraw::with('withdraw')->get();
 
-        return new WithdrawCollection($withdrawals);
+        return new PaypalWithdrawCollection($withdrawals);
     }
 
     /**
@@ -47,30 +45,17 @@ class PaypalWithdrawController extends Controller
             ]);
         }
         
-        return new WithdrawResource($withdraw);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
+        return new PaypalWithdrawResource($paypalWithdraw->load('withdraw'));
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(PaypalWithdraw $paypal)
     {
-        //
+        $data = $paypal->load('withdraw');
+        $paypal->delete();
+
+        return new PaypalWithdrawResource($data);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\API\Analytic;
 
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -24,7 +24,7 @@ class StoreAnalyticRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'period' => ['required','date', Rule::unique('analytics', 'period')->where(fn (Builder $query) => $query->where('artist_id', request('artist_id'))->exists())],
+            'period' => ['required', 'date', Rule::unique('analytics', 'period')->where(fn (Builder $query) => $query->where('artist_id', request('artist_id'))->exists())],
             'user_id' => 'sometimes|numeric|exists:users,id',
             'artist_id' => 'required|numeric|exists:artists,id',
             'shops.*' => 'required|array',
@@ -33,5 +33,12 @@ class StoreAnalyticRequest extends FormRequest
             'shops.*.download' => 'required|numeric|max_digits:10',
             'shops.*.music_store_id' => 'required|numeric|exists:music_stores,id',
         ];
+    }
+
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'period' => $this->period . '-01',
+        ]);
     }
 }

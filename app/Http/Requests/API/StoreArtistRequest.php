@@ -30,12 +30,4 @@ class StoreArtistRequest extends FormRequest
             'photo' => 'required|image|max:2048',
         ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(response()->json([
-            'success' => false,
-            'error' => $validator->getMessageBag()
-        ], 422));
-    }
 }

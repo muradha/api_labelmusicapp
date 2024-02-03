@@ -26,10 +26,10 @@ class UpdateUserRequest extends FormRequest
         return [
             'name' => 'required|max:254|string|min:5',
             'email' => [
-                'required', 'email',
+                'required', 'email', 'max:254',
                 Rule::unique('users', 'email')->ignore($this->user)
             ],
-            'password' => ['nullable', Password::defaults()],
+            'password' => ['nullable', Password::defaults(), 'max:254'],
         ];
     }
 }

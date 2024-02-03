@@ -29,12 +29,4 @@ class UpdateBankRequest extends FormRequest
             'bank_code' => ['required', 'string', 'max:50', Rule::unique('banks', 'bank_code')->ignore($this->bank)]
         ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(response()->json([
-            'success' => false,
-            'error' => $validator->getMessageBag()
-        ], 422));
-    }
 }

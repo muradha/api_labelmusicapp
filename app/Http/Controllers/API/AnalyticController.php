@@ -70,7 +70,7 @@ class AnalyticController extends Controller
             $analytic->stores()->sync($data['shops']);
         }
 
-        return (new AnalyticResource($analytic))->response()->setStatusCode(201);
+        return (new AnalyticResource($analytic->load('artist')))->response()->setStatusCode(201);
     }
 
     /**
@@ -95,7 +95,7 @@ class AnalyticController extends Controller
             $analytic->stores()->sync($data['shops']);
         }
 
-        return new AnalyticResource($analytic);
+        return new AnalyticResource($analytic->load('artist'));
     }
 
     /**

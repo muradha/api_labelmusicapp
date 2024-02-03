@@ -28,12 +28,4 @@ class StoreBankRequest extends FormRequest
             'bank_code' => 'required|string|max:50|unique:banks,bank_code'
         ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(response()->json([
-            'success' => false,
-            'error' => $validator->getMessageBag()
-        ], 422));
-    }
 }

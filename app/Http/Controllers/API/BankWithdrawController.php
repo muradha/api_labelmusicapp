@@ -4,10 +4,10 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\Withdraws\StoreBankWithdrawRequest;
-use App\Http\Resources\WithdrawResource;
+use App\Http\Resources\Withdraws\BankWithdrawCollection;
+use App\Http\Resources\Withdraws\BankWithdrawResource;
 use App\Models\BankWithdraw;
 use App\Models\Withdraw;
-use Illuminate\Http\Request;
 
 class BankWithdrawController extends Controller
 {
@@ -16,7 +16,9 @@ class BankWithdrawController extends Controller
      */
     public function index()
     {
-        //
+        $withdraw = BankWithdraw::with('withdraw')->get();
+
+        return new BankWithdrawCollection($withdraw);
     }
 
     /**
@@ -34,30 +36,17 @@ class BankWithdrawController extends Controller
             $withdraw = Withdraw::create($data);
         }
 
-        return new WithdrawResource($withdraw);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
+        return new BankWithdrawResource($bankWithdraw->load('withdraw'));
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(BankWithdraw $bank)
     {
-        //
+        $data = $bank->load('withdraw');
+        $bank->delete();
+
+        return new BankWithdrawResource($data);
     }
 }

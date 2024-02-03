@@ -14,6 +14,11 @@ class LegalResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id' => $this->id,
+            'message' => $this->message,
+            'conflict_type' => $this->conflict_type,
+            'user' => $this->whenLoaded('user'),
+        ];
     }
 }

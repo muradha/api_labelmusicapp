@@ -33,12 +33,4 @@ class UserLoginRequest extends FormRequest
             'password' => ['required']
         ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(response()->json([
-            'success' => false,
-            'error' => $validator->getMessageBag()
-        ], 422));
-    }
 }

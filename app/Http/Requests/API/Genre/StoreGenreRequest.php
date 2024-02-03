@@ -27,12 +27,4 @@ class StoreGenreRequest extends FormRequest
             'name' => 'required|string|min:5|max:100|unique:genres,name',
         ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(response()->json([
-            'success' => false,
-            'error' => $validator->getMessageBag()
-        ], 422));
-    }
 }

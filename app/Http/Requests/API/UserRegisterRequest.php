@@ -38,12 +38,4 @@ class UserRegisterRequest extends FormRequest
             'password' => ['required', 'confirmed', Password::min(8)]
         ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(response()->json([
-            'success' => false,
-            'error' => $validator->getMessageBag()
-        ], 422));
-    }
 }

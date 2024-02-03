@@ -16,9 +16,10 @@ use App\Http\Controllers\API\MusicStoreController;
 use App\Http\Controllers\API\OperatorController;
 use App\Http\Controllers\API\PaypalWithdrawController;
 use App\Http\Controllers\API\PlatformController;
+use App\Http\Controllers\API\Services\PlaylistPitchController;
+use App\Http\Controllers\API\Services\YoutubeOacController;
 use App\Http\Controllers\API\TrackController;
 use App\Http\Controllers\API\TransactionController;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -42,17 +43,15 @@ Route::apiResource('accounts', AccountController::class);
 Route::apiResource('transactions', TransactionController::class);
 Route::get('announcements', [AnnouncementController::class, 'index']);
 Route::post('announcements', [AnnouncementController::class, 'store']);
-Route::get('withdraw/paypal', [PaypalWithdrawController::class, 'index']);
-Route::post('withdraw/paypal', [PaypalWithdrawController::class, 'store']);
-Route::post('withdraw/bank', [BankWithdrawController::class, 'store']);
-Route::apiResource('legals', LegalController::class);
 
-Route::get('test', function () {
-    $user= User::find(10);
+Route::apiResource('withdraw/paypal', PaypalWithdrawController::class)->except(['update', 'show']);
+Route::apiResource('withdraw/banks', BankWithdrawController::class)->except(['update', 'show']);
 
-    $user->sendEmailVerificationNotification();
-}); 
+Route::apiResource('legals', LegalController::class)->except(['update', 'show']);
+Route::post('legals/bulk', [LegalController::class, 'bulkStore']);
 
+Route::apiResource('services/playlist-pitches', PlaylistPitchController::class);
+Route::apiResource('services/youtube-oac', YoutubeOacController::class);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/email/verify', [AuthController::class, 'notice'])->name('verification.notice');

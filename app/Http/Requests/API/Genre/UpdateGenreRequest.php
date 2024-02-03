@@ -28,12 +28,4 @@ class UpdateGenreRequest extends FormRequest
             'name' => ['required','string','max:100', Rule::unique('genres', 'name')->ignore($this->id)]
         ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(response()->json([
-            'success' => false,
-            'error' => $validator->getMessageBag()
-        ], 422));
-    }
 }

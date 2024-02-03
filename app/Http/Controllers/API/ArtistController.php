@@ -45,6 +45,8 @@ class ArtistController extends Controller
             $data['photo'] = $path;
         }
 
+        $data['user_id'] = Auth::user()->id;
+
         $artist = Artist::create($data);
 
         return (new ArtistResource($artist))->response()->setStatusCode(201);

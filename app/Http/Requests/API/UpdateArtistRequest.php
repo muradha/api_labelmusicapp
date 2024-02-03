@@ -25,21 +25,13 @@ class UpdateArtistRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => 'required|string|max:50',
-            'last_name' => 'required|max:50|string',
+            'first_name' => 'required|string|max:250',
+            'last_name' => 'required|string|max:250',
             'email' => [
                 'required', 'email', 'max:255',
                 Rule::unique('artists', 'email')->ignore($this->artist)
             ],
-            'photo' => 'required|image|max:2048',
+            'photo' => 'nullable|image|max:2048',
         ];
-    }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(response()->json([
-            'success' => false,
-            'error' => $validator->getMessageBag()
-        ], 422));
     }
 }
