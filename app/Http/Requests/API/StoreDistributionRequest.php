@@ -30,7 +30,7 @@ class StoreDistributionRequest extends FormRequest
             'upc' => 'required|numeric|unique:distributions,upc',
             'release_date_original' => 'nullable|date',
             'explicit_content' => 'required|boolean',
-            'cover' => 'required|image|max:2048',
+            'cover' => 'required|image|dimensions:width:3000,height:3000|max:2048',
             'country' => 'nullable|string|max:100',
             'copyright' => 'nullable|string|max:250',
             'copyright_year' => 'nullable|numeric|between:1900,2100',

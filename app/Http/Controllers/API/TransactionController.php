@@ -8,6 +8,7 @@ use App\Http\Requests\API\Transactions\UpdateTransactionRequest;
 use App\Http\Resources\TransactionCollection;
 use App\Http\Resources\TransactionResource;
 use App\Models\Transaction;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class TransactionController extends Controller
@@ -17,7 +18,13 @@ class TransactionController extends Controller
      */
     public function index()
     {
-        $transactions = Transaction::all();
+        $user = Auth::user();
+
+        if ($user->hasAnyRole('admin')) {
+            $transactions = Transaction::all();
+        } else {
+            $transactions = Transaction::whereHas('account', fn (Builder $query) => $query->where('user_id', $user->id))->get();
+        }
 
         return new TransactionCollection($transactions);
     }

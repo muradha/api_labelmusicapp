@@ -35,7 +35,7 @@ class UserRegisterRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class),
             ],
-            'password' => ['required', 'confirmed', Password::min(8)]
+            'password' => ['required', 'confirmed', Password::defaults()]
         ];
     }
 }

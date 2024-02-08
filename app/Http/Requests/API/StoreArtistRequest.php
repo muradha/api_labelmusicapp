@@ -26,7 +26,7 @@ class StoreArtistRequest extends FormRequest
         return [
             'first_name' => 'required|string|max:50',
             'last_name' => 'required|max:50|string',
-            'email' => 'required|email|max:255|unique:artists',
+            'email' => 'required|email|max:255|unique:artists,email',
             'photo' => 'required|image|max:2048',
         ];
     }

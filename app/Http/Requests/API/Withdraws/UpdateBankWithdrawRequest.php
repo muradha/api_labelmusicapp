@@ -4,7 +4,7 @@ namespace App\Http\Requests\API\Withdraws;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreBankWithdrawRequest extends FormRequest
+class UpdateBankWithdrawRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,8 +24,9 @@ class StoreBankWithdrawRequest extends FormRequest
         return [
             'name' => 'required|string|max:100',
             'amount' => 'required|numeric|max_digits:10',
+            'status' => 'required|string|in:REJECTED,APPROVED,PENDING',
+            'country' => 'required|string|min:4|max:100',
             'address' => 'required|string|max:254',
-            'country' => 'required|string|max:100|min:4',
             'province' => 'required|string|max:100',
             'city' => 'required|string|max:100',
             'postal_code' => 'required|numeric|max_digits:10',

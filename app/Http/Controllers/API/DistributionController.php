@@ -8,6 +8,7 @@ use App\Http\Requests\API\UpdateDistributionRequest;
 use App\Http\Resources\DistributionCollection;
 use App\Http\Resources\DistributionResource;
 use App\Models\Distribution;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DistributionController extends Controller
@@ -87,6 +88,16 @@ class DistributionController extends Controller
     public function destroy(Distribution $distribution)
     {
         $distribution->delete();
+
+        return new DistributionResource($distribution);
+    }
+
+    public function updateStatus(Request $request, Distribution $distribution) : DistributionResource {
+        $data = $request->validate([
+            'verification_status' => 'required|string|in:PENDING,REJECTED,APPROVED'
+        ]);
+
+        $distribution->update($data);
 
         return new DistributionResource($distribution);
     }

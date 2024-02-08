@@ -29,6 +29,7 @@ class StorePaypalWithdrawRequest extends FormRequest
             'province' => 'required|string|max:100',
             'city' => 'required|string|max:100',
             'postal_code' => 'required|numeric|max_digits:10',
+            'country' => 'required|string|max:100',
         ];
     }
 }

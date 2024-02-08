@@ -7,10 +7,16 @@ use App\Models\Announcement;
 use App\Models\User;
 use App\Notifications\AnnouncementNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 
 class AnnouncementController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware(['role:admin'], ['except' => 'notification']);
+    }
     /**
      * Display a listing of the resource.
      */
@@ -37,11 +43,29 @@ class AnnouncementController extends Controller
 
         $users = User::whereNotNull('email_verified_at')->get();
 
-        Notification::send($users,new AnnouncementNotification($announcement));
+        Notification::send($users, new AnnouncementNotification($announcement));
 
         return response()->json([
             'data' => $announcement
         ], 201);
     }
 
+    public function notification()
+    {
+        $notifications = Auth::user()->unreadNotifications->where('type', AnnouncementNotification::class)->first();
+
+        $data = [];
+
+        if (!empty($notifications) && $notifications->count() > 0) {
+            $data = [
+                'id' => $notifications->id,
+                'title' => $notifications->data['title'],
+                'content' => $notifications->data['content'],
+            ];
+        }
+
+        return response()->json([
+            'data' => $data
+        ]);
+    }
 }

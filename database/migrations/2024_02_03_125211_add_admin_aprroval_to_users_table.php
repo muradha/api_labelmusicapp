@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('paypal_withdraw', function (Blueprint $table) {
-            $table->id();
-            $table->string('email');
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->timestamps();
+        Schema::table('users', function (Blueprint $table) {
+            $table->enum('admin_approval', ['APPROVED', 'PENDING', 'REJECTED'])->default('PENDING')->after('email_verified_at');
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('paypal_withdraw');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('admin_approval');
+        });
     }
 };

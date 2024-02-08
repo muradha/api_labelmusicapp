@@ -8,10 +8,13 @@ use App\Http\Requests\API\UpdateUserRequest;
 use App\Http\Resources\UserCollection;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Notifications\ConflictNotification;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
@@ -27,7 +30,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::whereHas('roles', fn ($query) => $query->where('name', 'user'))->get();
+        $users = User::with('profile')->whereHas('roles', fn ($query) => $query->where('name', 'user'))->get();
 
         return new UserCollection($users);
     }
@@ -88,15 +91,17 @@ class UserController extends Controller
 
     public function unreadNotification()
     {
-        $notifications = Auth::user()->unreadNotifications->first();
+        $notifications = Auth::user()->unreadNotifications->where('type', ConflictNotification::class);
 
-        $data = [];
-        if ($notifications) {
-            $data = [
-                'id' => $notifications->id,
-                'title' => $notifications->data['title'],
-                'content' => $notifications->data['content'],
-            ];
+        $data = null;
+        if (!empty($notifications) && $notifications->count() > 0) {
+            foreach ($notifications as $value) {
+                $data[] = [
+                    'id' => $value->id,
+                    'message' => $value->data['message'],
+                    'conflict_type' => $value->data['conflict_type'],
+                ];
+            }
         }
 
         return response()->json([
@@ -123,5 +128,43 @@ class UserController extends Controller
         return response()->json([
             'message' => 'Read announcement successfully',
         ]);
+    }
+
+    public function getProfile(): UserResource
+    {
+        $user = User::with('profile')->findOrFail(Auth::user()->id);
+
+        return new UserResource($user);
+    }
+
+    public function updateProfile(Request $request): UserResource
+    {
+        $user_id = Auth::user()->id;
+        $data = $request->validate([
+            'name' => 'nullable|max:254|string|min:5',
+            'email' => ['nullable', 'email', 'max:254', Rule::unique('users', 'email')->ignore($user_id)],
+            'password' => ['nullable', 'current_password:sanctum'],
+            'new_password' => ['nullable', 'sometimes', 'required_with:password', Password::defaults(), 'max:254', 'different:password'],
+            'password_confirmation' => 'nullable|sometimes|required_with:password|same:new_password',
+            'birth_date' => 'nullable|date',
+            'phone_number' => 'nullable|max:20|string',
+            'company_name' => 'nullable|max:100|string',
+            'street' => 'nullable|max:100|string',
+            'city' => 'nullable|max:100|string',
+            'province' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:10',
+            'country' => 'nullable|string|max:100'
+        ]);
+
+        $user = User::findOrFail($user_id);
+        $data['password'] = $data['new_password'] ?? $user->password;
+        $user->update($data);
+
+        $user->profile()->updateOrCreate(
+            ['user_id' => $user->id],
+            $data
+        );
+
+        return new UserResource($user);
     }
 }

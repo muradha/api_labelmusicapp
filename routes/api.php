@@ -5,6 +5,7 @@ use App\Http\Controllers\API\AdminController;
 use App\Http\Controllers\API\AnalyticController;
 use App\Http\Controllers\API\AnnouncementController;
 use App\Http\Controllers\API\ArtistController;
+use App\Http\Controllers\API\ArtworkTemplateController;
 use App\Http\Controllers\API\GenreController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\AuthController;
@@ -20,7 +21,7 @@ use App\Http\Controllers\API\Services\PlaylistPitchController;
 use App\Http\Controllers\API\Services\YoutubeOacController;
 use App\Http\Controllers\API\TrackController;
 use App\Http\Controllers\API\TransactionController;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,63 +37,62 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::apiResource('platforms', PlatformController::class);
-Route::apiResource('stores', MusicStoreController::class);
-Route::apiResource('admins', AdminController::class);
-Route::apiResource('accounts', AccountController::class);
-Route::apiResource('transactions', TransactionController::class);
-Route::get('announcements', [AnnouncementController::class, 'index']);
-Route::post('announcements', [AnnouncementController::class, 'store']);
 
-Route::apiResource('withdraw/paypal', PaypalWithdrawController::class)->except(['update', 'show']);
-Route::apiResource('withdraw/banks', BankWithdrawController::class)->except(['update', 'show']);
-
-Route::apiResource('legals', LegalController::class)->except(['update', 'show']);
-Route::post('legals/bulk', [LegalController::class, 'bulkStore']);
-
-Route::apiResource('services/playlist-pitches', PlaylistPitchController::class);
-Route::apiResource('services/youtube-oac', YoutubeOacController::class);
-
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/email/verify', [AuthController::class, 'notice'])->name('verification.notice');
-    Route::post('/email/verification-notification', [AuthController::class, 'resend'])->middleware(['throttle:6,1'])->name('verification.send');
-    Route::get('users/notification', [UserController::class, 'unreadNotification']);
-    Route::post('users/notification', [UserController::class, 'readNotification']);
+Route::middleware(['auth:sanctum', 'adminApproval'])->group(function () {
+    Route::get('/users/profile', [UserController::class, 'getProfile']);
+    Route::put('/users/profile', [UserController::class, 'updateProfile']);
 
     Route::post('/logout', [AuthController::class, 'logout']);
-    
+
+    Route::get('/email/verify', [AuthController::class, 'notice'])->name('verification.notice');
+    Route::post('/email/verification-notification', [AuthController::class, 'resend'])->middleware(['throttle:6,1'])->name('verification.send');
+
+    /* Artworks */
+    Route::get('artworks/generate', [ArtworkTemplateController::class, 'generate']);
+
+    /* Withdraws */
+    Route::apiResource('withdraw/paypal', PaypalWithdrawController::class)->except('show');
+    Route::apiResource('withdraw/banks', BankWithdrawController::class)->except('show');
+
+    Route::get('announcements/notification', [AnnouncementController::class, 'notification']);
+
+    Route::get('users/notifications', [UserController::class, 'unreadNotification']);
+    Route::post('users/notifications', [UserController::class, 'readNotification']);
+
+    Route::patch('distributions/{distribution}/status', [DistributionController::class, 'updateStatus']);
+
+    Route::get('analytics/{period}/artist/{artist}', [AnalyticController::class, 'showByPeriodAndArtist']);
+
     Route::apiResources([
         'tracks' => TrackController::class,
         'distributions' => DistributionController::class,
         'analytics' => AnalyticController::class,
+        'artists' => ArtistController::class,
+        'transactions' => TransactionController::class,
+        'services/playlist-pitches' => PlaylistPitchController::class,
+        'services/youtube-oac' => YoutubeOacController::class
     ]);
-
-    Route::get('analytics/{period}/artist/{artist}', [AnalyticController::class, 'showByPeriodAndArtist']);
-
-    Route::group(['middleware' => ['role:user|admin']], function () {
-        Route::apiResources([
-            'artists' => ArtistController::class,
-        ]);
-    });
 
     Route::group(['middleware' => ['role:admin']], function () {
         Route::get('/users/log', [UserController::class, 'getUsersWithLog']);
+
+        Route::get('announcements', [AnnouncementController::class, 'index']);
+        Route::post('announcements', [AnnouncementController::class, 'store']);
+        
+        Route::apiResource('legals', LegalController::class)->except(['update', 'show']);
+        Route::post('legals/bulk', [LegalController::class, 'bulkStore']);
+
+        Route::apiResource('artworks', ArtworkTemplateController::class)->except(['show', 'generate']);
+
         Route::apiResources([
+            'accounts' => AccountController::class,
+            'admins' => AdminController::class,
+            'stores' => MusicStoreController::class,
+            'platforms' => PlatformController::class,
             'users' => UserController::class,
             'genres' => GenreController::class,
             'banks' => BankController::class,
             'operators' => OperatorController::class,
         ]);
     });
-
-    
-    // Route::group(['middleware' => ['role:admin|operator']], function () {
-    //     Route::apiResources([
-    //         'operators' => OperatorController::class,
-    //     ]);
-    // });
-});
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
 });

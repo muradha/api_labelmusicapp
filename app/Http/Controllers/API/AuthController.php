@@ -9,7 +9,6 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,6 +25,7 @@ class AuthController extends Controller
         $user = new User($data);
         $user->password = Hash::make($data['password']);
         $user->save();
+        $user->assignRole('user');
 
         return (new UserResource($user))->response()->setStatusCode(201);
     }
@@ -47,7 +47,7 @@ class AuthController extends Controller
             ], 401));
         }
 
-        return (new UserResource($user));
+        return (new UserResource($user->load('profile')));
     }
 
     public function logout()

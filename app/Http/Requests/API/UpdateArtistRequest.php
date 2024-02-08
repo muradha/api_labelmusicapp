@@ -28,7 +28,7 @@ class UpdateArtistRequest extends FormRequest
             'first_name' => 'required|string|max:250',
             'last_name' => 'required|string|max:250',
             'email' => [
-                'required', 'email', 'max:255',
+                'required', 'email', 'max:250',
                 Rule::unique('artists', 'email')->ignore($this->artist)
             ],
             'photo' => 'nullable|image|max:2048',

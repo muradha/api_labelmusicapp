@@ -30,7 +30,7 @@ class UpdateDistributionRequest extends FormRequest
             'release_date' => 'required|date',
             'release_date_original' => 'nullable|date',
             'explicit_content' => 'required|boolean',
-            'cover' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+            'cover' => 'nullable|image|dimensions:width:3000,height:3000|max:2048',
             'country' => 'nullable|string|max:100',
             'copyright' => 'nullable|string|max:250',
             'copyright_year' => 'required|numeric|between:1900,2100',

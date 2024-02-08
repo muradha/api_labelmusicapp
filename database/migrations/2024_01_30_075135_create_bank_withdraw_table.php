@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('ach_code', 100)->nullable();
             $table->string('ifsc_code', 100)->nullable()->comment('Indian Financial System Code (IFSC)');
             $table->string('currency', 50);
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });
     }
