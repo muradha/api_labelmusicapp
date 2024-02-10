@@ -24,7 +24,7 @@ class ArtistController extends Controller
     public function index()
     {
         $user = Auth::user();
-        if ($user->hasAnyRole('admin', 'operator')) {
+        if ($user->hasAnyRole('admin', 'operator', 'super-admin')) {
             $artists = Artist::all();
         }else{
             $artists = Artist::where('user_id', $user->id)->get();

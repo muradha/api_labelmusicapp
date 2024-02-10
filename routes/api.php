@@ -81,7 +81,7 @@ Route::middleware(['auth:sanctum', 'adminApproval'])->group(function () {
         'services/youtube-oac' => YoutubeOacController::class
     ]);
 
-    Route::group(['middleware' => ['role:admin']], function () {
+    Route::group(['middleware' => ['role:admin|super-admin']], function () {
         Route::get('/dashboard/admin', [DashboardController::class, 'admin']);
 
         Route::get('/users/log', [UserController::class, 'getUsersWithLog']);
@@ -96,12 +96,17 @@ Route::middleware(['auth:sanctum', 'adminApproval'])->group(function () {
 
         Route::apiResources([
             'accounts' => AccountController::class,
-            'admins' => AdminController::class,
             'stores' => MusicStoreController::class,
             'platforms' => PlatformController::class,
             'users' => UserController::class,
             'genres' => GenreController::class,
             'banks' => BankController::class,
+        ]);
+    });
+
+    Route::middleware(['role:super-admin'])->group(function () {
+        Route::apiResources([
+            'admins' => AdminController::class,
             'operators' => OperatorController::class,
         ]);
     });

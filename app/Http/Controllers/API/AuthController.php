@@ -57,7 +57,7 @@ class AuthController extends Controller
 
         $admin = User::with('roles')->where('email', $data['email'])->first();
 
-        if ($admin->hasAnyRole('admin') && Auth::attempt($data)) {
+        if ($admin->hasAnyRole('admin', 'super-admin') && Auth::attempt($data)) {
             $admin->token = $admin->createToken('auth_token')->plainTextToken;
         } else {
             throw new HttpResponseException(response()->json([

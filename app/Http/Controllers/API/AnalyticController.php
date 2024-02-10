@@ -32,7 +32,7 @@ class AnalyticController extends Controller
         $startDate = Carbon::createFromDate($year, 1, 1)->startOfMonth();
         $endDate = Carbon::createFromDate($year, 12, 31)->endOfMonth();
 
-        if ($user->hasAnyRole('admin')) {
+        if ($user->hasAnyRole('admin', 'super-admin', 'operator')) {
             $analytics = Analytic::with('artist')->whereBetween('period', [$startDate, $endDate])
                 ->orderBy('period')
                 ->get()

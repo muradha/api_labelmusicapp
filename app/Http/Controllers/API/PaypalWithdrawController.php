@@ -24,7 +24,7 @@ class PaypalWithdrawController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasAnyRole('admin')) {
+        if ($user->hasAnyRole('admin', 'super-admin', 'operator')) {
             $withdrawals = PaypalWithdraw::with('withdraw')->get();
         } else {
             $withdrawals = PaypalWithdraw::with('withdraw')->where('user_id', $user->id)->get();

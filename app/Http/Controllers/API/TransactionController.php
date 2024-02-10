@@ -20,7 +20,7 @@ class TransactionController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasAnyRole('admin')) {
+        if ($user->hasAnyRole('admin', 'super-admin', 'operator')) {
             $transactions = Transaction::all();
         } else {
             $transactions = Transaction::whereHas('account', fn (Builder $query) => $query->where('user_id', $user->id))->get();

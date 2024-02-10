@@ -24,7 +24,7 @@ class BankWithdrawController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasAnyRole('admin')) {
+        if ($user->hasAnyRole('admin', 'super-admin', 'operator')) {
             $withdrawals = BankWithdraw::with('withdraw')->get();
         } else {
             $withdrawals = BankWithdraw::with('withdraw')->where('user_id', $user->id)->get();
