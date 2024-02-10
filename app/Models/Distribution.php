@@ -25,7 +25,7 @@ class Distribution extends Model
     }
 
     public function artist(): BelongsTo{
-        return $this->belongsTo(Artist::class);
+        return $this->belongsTo(Artist::class, 'artist_id', 'id');
     }
 
     public function tracks(): HasMany {

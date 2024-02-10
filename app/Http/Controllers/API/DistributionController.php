@@ -30,7 +30,7 @@ class DistributionController extends Controller
         if($user->hasAnyRole('admin', 'operator')) {
             $distributions = Distribution::with(['artist', 'tracks'])->get();
         } else {
-            $distributions = $user->distributions()->with(['artist', 'tracks'])->get();
+            $distributions = Distribution::with(['artist', 'tracks'])->where('user_id', $user->id)->get();
         }
 
         return new DistributionCollection($distributions);
@@ -47,7 +47,7 @@ class DistributionController extends Controller
             $data['cover'] = $request->file('cover')->store('cover', 'public');
         }
 
-        $data['upc'] = $data['upc'] ?? rand(1000000000000, 9999999999999);
+        $data['upc'] = rand(1000000000000, 9999999999999);
 
         $data['user_id'] = Auth::user()->id;
         
@@ -61,7 +61,7 @@ class DistributionController extends Controller
      */
     public function show(Distribution $distribution): DistributionResource
     {
-        return new DistributionResource($distribution);
+        return new DistributionResource($distribution->load('artist'));
     }
 
     /**
@@ -75,6 +75,10 @@ class DistributionController extends Controller
             $data['cover'] = $request->file('cover')->store('cover', 'public');
         }else{
             $data['cover'] = $distribution->cover;
+        }
+
+        if(!$distribution->upc){
+            $data['upc'] = rand(1000000000000, 9999999999999);
         }
 
         $distribution->update($data);

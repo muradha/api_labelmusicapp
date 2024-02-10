@@ -15,7 +15,6 @@ use App\Models\Featuring;
 use App\Models\Producer;
 use App\Models\Track;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class TrackController extends Controller
@@ -32,7 +31,7 @@ class TrackController extends Controller
      */
     public function index()
     {
-        $tracks = Track::all();
+        $tracks = Track::with('musicStores')->get();
 
         return new TrackCollection($tracks);
     }
@@ -78,7 +77,7 @@ class TrackController extends Controller
             }
         }
 
-        
+
         if (!empty($data['featurings'])) {
             foreach ($request->featurings as $key => $item) {
                 $featurings[] = [
@@ -87,7 +86,7 @@ class TrackController extends Controller
                     'track_id' => $track->id,
                 ];
             }
-            
+
             if (!empty($featurings[0]['name'])) {
                 $featurings_id = collect($featurings)->pluck('id');
                 $track->featurings()->whereNotIn('id', $featurings_id)->delete();
@@ -95,7 +94,7 @@ class TrackController extends Controller
             }
         }
 
-        
+
         if (!empty($data['producers'])) {
             foreach ($request->producers as $key => $item) {
                 $producers[] = [
@@ -104,7 +103,7 @@ class TrackController extends Controller
                     'track_id' => $track->id,
                 ];
             }
-            
+
             if (!empty($producers[0]['name'])) {
                 $producers_id = collect($producers)->pluck('id');
                 $track->producers()->whereNotIn('id', $producers_id)->delete();
@@ -143,13 +142,13 @@ class TrackController extends Controller
                 Composer::upsert($composers, ['id', 'track_id'], ['name']);
             }
         }
-        if(empty($data['music_stores'])) {
+        if (empty($data['music_stores'])) {
             $data['music_stores'] = [];
         }
 
         $track->musicStores()->sync($data['music_stores']);
 
-        return (new TrackResource($track))->response()->setStatusCode(201);
+        return (new TrackResource($track->load('music_stores')))->response()->setStatusCode(201);
     }
 
     /**
@@ -159,6 +158,13 @@ class TrackController extends Controller
     {
         $data = $track->load('authors', 'featurings', 'producers', 'contributors', 'composers', 'musicStores');
         return new TrackResource($data);
+    }
+
+    public function showTracksByDistributionId(Distribution $distribution): TrackCollection
+    {
+        $tracks = Track::with(['authors', 'featurings', 'producers', 'contributors', 'composers', 'musicStores'])->where('distribution_id', $distribution->id)->get();
+
+        return new TrackCollection($tracks);
     }
 
     /**
@@ -186,7 +192,7 @@ class TrackController extends Controller
                 ],
             ], 404));
         }
-        
+
         if (!empty($data['authors'])) {
             foreach ($request->authors as $key => $item) {
                 $authors[] = [
@@ -203,7 +209,7 @@ class TrackController extends Controller
             }
         }
 
-        
+
         if (!empty($data['featurings'])) {
             foreach ($request->featurings as $key => $item) {
                 $featurings[] = [
@@ -212,7 +218,7 @@ class TrackController extends Controller
                     'track_id' => $track->id,
                 ];
             }
-            
+
             if (!empty($featurings[0]['name'])) {
                 $featurings_id = collect($featurings)->pluck('id');
                 $track->featurings()->whereNotIn('id', $featurings_id)->delete();
@@ -220,7 +226,7 @@ class TrackController extends Controller
             }
         }
 
-        
+
         if (!empty($data['producers'])) {
             foreach ($request->producers as $key => $item) {
                 $producers[] = [
@@ -229,7 +235,7 @@ class TrackController extends Controller
                     'track_id' => $track->id,
                 ];
             }
-            
+
             if (!empty($producers[0]['name'])) {
                 $producers_id = collect($producers)->pluck('id');
                 $track->producers()->whereNotIn('id', $producers_id)->delete();
@@ -269,7 +275,7 @@ class TrackController extends Controller
             }
         }
 
-        if(empty($data['music_stores'])) {
+        if (empty($data['music_stores'])) {
             $data['music_stores'] = [];
         }
 

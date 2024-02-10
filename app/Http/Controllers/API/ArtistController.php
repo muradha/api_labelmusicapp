@@ -27,7 +27,7 @@ class ArtistController extends Controller
         if ($user->hasAnyRole('admin', 'operator')) {
             $artists = Artist::all();
         }else{
-            $artists = $user->artists()->get();
+            $artists = Artist::where('user_id', $user->id)->get();
         }
 
         return (new ArtistCollection($artists))->response()->setStatusCode(200);

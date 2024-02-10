@@ -12,6 +12,11 @@ use App\Models\YoutubeOac;
 
 class YoutubeOacController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['role:admin|user']);
+        $this->middleware(['role:user'], ['only' => ['store']]);
+    }
     /**
      * Display a listing of the resource.
      */

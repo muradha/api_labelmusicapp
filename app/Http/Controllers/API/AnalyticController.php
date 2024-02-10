@@ -16,24 +16,40 @@ use Illuminate\Support\Facades\Validator;
 
 class AnalyticController extends Controller
 {
+    public function __construct(){
+        $this->middleware(['role:admin|user']);
+        $this->middleware(['role:user'], ['only' => 'index', 'showByPeriodAndArtist']);
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
+        $user = Auth::user();
         // $analytics = Analytic::orderBy('period', 'asc')->with('stores', 'artist')->get();
 
         $year = Date('Y');
         $startDate = Carbon::createFromDate($year, 1, 1)->startOfMonth();
         $endDate = Carbon::createFromDate($year, 12, 31)->endOfMonth();
 
-        $analytics = Analytic::with('artist')->whereBetween('period', [$startDate, $endDate])
-            ->orderBy('period')
-            ->get()
-            ->groupBy(function ($analytic) {
-                return $analytic->period->format('F Y');
-            });
+        if ($user->hasAnyRole('admin')) {
+            $analytics = Analytic::with('artist')->whereBetween('period', [$startDate, $endDate])
+                ->orderBy('period')
+                ->get()
+                ->groupBy(function ($analytic) {
+                    return $analytic->period->format('F Y');
+                });
+        } else {
+            $analytics = Analytic::with('artist')->whereBetween('period', [$startDate, $endDate])
+                ->where('user_id', $user->id)
+                ->orderBy('period')
+                ->get()
+                ->groupBy(function ($analytic) {
+                    return $analytic->period->format('F Y');
+                });
+        }
 
+        $analytic = [];
         foreach ($analytics as $key => $value) {
             foreach ($value as $item) {
                 $analytic[] = [

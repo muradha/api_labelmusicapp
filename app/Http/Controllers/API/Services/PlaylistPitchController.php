@@ -11,6 +11,11 @@ use App\Models\Service;
 
 class PlaylistPitchController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['role:admin|user']);
+        $this->middleware(['role:user'], ['only' => ['store']]);
+    }
     /**
      * Display a listing of the resource.
      */
@@ -29,8 +34,8 @@ class PlaylistPitchController extends Controller
         $data = $request->validated();
 
         $playlistPitch = PlaylistPitch::create($data);
-        
-        if($playlistPitch){
+
+        if ($playlistPitch) {
             $data['serviceable_id'] = $playlistPitch->id;
             $data['serviceable_type'] = PlaylistPitch::class;
 
@@ -57,7 +62,7 @@ class PlaylistPitchController extends Controller
 
         $isSuccess = $playlist_pitch->update($data);
 
-        if($isSuccess && $playlist_pitch->service){
+        if ($isSuccess && $playlist_pitch->service) {
             $playlist_pitch->service->update($data);
         }
 

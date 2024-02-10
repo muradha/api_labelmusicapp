@@ -38,6 +38,7 @@ class DistributionResource extends JsonResource
             'verification_status' => $this->verification_status,
             'description' => $this->description,
             'tracks' => $this->tracks,
+            'artist' => $this->whenLoaded('artist'),
         ];
     }
 }

@@ -11,6 +11,7 @@ use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BankController;
 use App\Http\Controllers\API\BankWithdrawController;
+use App\Http\Controllers\API\DashboardController;
 use App\Http\Controllers\API\DistributionController;
 use App\Http\Controllers\API\LegalController;
 use App\Http\Controllers\API\MusicStoreController;
@@ -37,8 +38,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/admin/login', [AuthController::class, 'adminLogin']);
 
 Route::middleware(['auth:sanctum', 'adminApproval'])->group(function () {
+    Route::get('/dashboard/user', [DashboardController::class, 'user']);
+
     Route::get('/users/profile', [UserController::class, 'getProfile']);
     Route::put('/users/profile', [UserController::class, 'updateProfile']);
 
@@ -59,7 +63,11 @@ Route::middleware(['auth:sanctum', 'adminApproval'])->group(function () {
     Route::get('users/notifications', [UserController::class, 'unreadNotification']);
     Route::post('users/notifications', [UserController::class, 'readNotification']);
 
-    Route::patch('distributions/{distribution}/status', [DistributionController::class, 'updateStatus']);
+    Route::get('tracks/{distribution}', [TrackController::class, 'showTracksByDistributionId'])->middleware(['role:admin']);
+
+    Route::patch('distributions/{distribution}/status', [DistributionController::class, 'updateStatus'])->middleware(['role:admin']);
+
+    Route::patch('users/{user}/status', [UserController::class, 'updateStatus'])->middleware(['role:admin']);
 
     Route::get('analytics/{period}/artist/{artist}', [AnalyticController::class, 'showByPeriodAndArtist']);
 
@@ -74,6 +82,8 @@ Route::middleware(['auth:sanctum', 'adminApproval'])->group(function () {
     ]);
 
     Route::group(['middleware' => ['role:admin']], function () {
+        Route::get('/dashboard/admin', [DashboardController::class, 'admin']);
+
         Route::get('/users/log', [UserController::class, 'getUsersWithLog']);
 
         Route::get('announcements', [AnnouncementController::class, 'index']);

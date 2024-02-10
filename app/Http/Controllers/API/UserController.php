@@ -19,13 +19,6 @@ use Illuminate\Validation\Rules\Password;
 class UserController extends Controller
 {
     /**
-     * Create the controller instance.
-     */
-    public function __construct()
-    {
-        $this->authorizeResource(User::class, 'user');
-    }
-    /**
      * Display a listing of the resource.
      */
     public function index()
@@ -66,6 +59,18 @@ class UserController extends Controller
         if (empty($data['password'])) unset($data['password']);
 
         $user->update($data);
+
+        return new UserResource($user);
+    }
+
+    public function updateStatus(Request $request, User $user){
+        $data = $request->validate([
+            'status' => 'required|string|in:APPROVED,REJECTED',
+        ]);
+
+        $user->update([
+            'admin_approval' => $data['status']
+        ]);
 
         return new UserResource($user);
     }

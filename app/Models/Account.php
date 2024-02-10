@@ -22,4 +22,9 @@ class Account extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+
+    public function bank(): BelongsTo
+    {
+        return $this->belongsTo(Bank::class);
+    }
 }
