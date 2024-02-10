@@ -1,9 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\AuthController;
-use App\Models\User;
 use Illuminate\Support\Facades\Route;
-use Spatie\Permission\Models\Role;
 
 /*
 |--------------------------------------------------------------------------
