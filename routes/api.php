@@ -55,15 +55,13 @@ Route::middleware(['auth:sanctum', 'adminApproval'])->group(function () {
     Route::get('artworks/generate', [ArtworkTemplateController::class, 'generate']);
 
     /* Withdraws */
-    Route::apiResource('withdraw/paypal', PaypalWithdrawController::class)->except('show');
-    Route::apiResource('withdraw/banks', BankWithdrawController::class)->except('show');
+    Route::apiResource('withdraw/paypal', PaypalWithdrawController::class, ['as' => 'withdraw'])->except('show');
+    Route::apiResource('withdraw/banks', BankWithdrawController::class, ['as' => 'withdraw'])->except('show');
 
     Route::get('announcements/notification', [AnnouncementController::class, 'notification']);
 
     Route::get('users/notifications', [UserController::class, 'unreadNotification']);
     Route::post('users/notifications', [UserController::class, 'readNotification']);
-
-    Route::get('tracks/{distribution}', [TrackController::class, 'showTracksByDistributionId'])->middleware(['role:admin']);
 
     Route::patch('distributions/{distribution}/status', [DistributionController::class, 'updateStatus'])->middleware(['role:admin']);
 
@@ -80,6 +78,8 @@ Route::middleware(['auth:sanctum', 'adminApproval'])->group(function () {
         'services/playlist-pitches' => PlaylistPitchController::class,
         'services/youtube-oac' => YoutubeOacController::class
     ]);
+
+    Route::get('distributions/{distribution}/tracks', [TrackController::class, 'showTracksByDistributionId'])->middleware(['role:admin']);
 
     Route::group(['middleware' => ['role:admin|super-admin']], function () {
         Route::get('/dashboard/admin', [DashboardController::class, 'admin']);

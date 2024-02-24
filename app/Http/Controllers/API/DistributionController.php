@@ -10,6 +10,7 @@ use App\Http\Resources\DistributionResource;
 use App\Models\Distribution;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class DistributionController extends Controller
 {
@@ -72,6 +73,9 @@ class DistributionController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('cover')) {
+            if($distribution->cover && Storage::disk('public')->exists($distribution->cover)) {
+                Storage::disk('public')->delete($distribution->cover);
+            }
             $data['cover'] = $request->file('cover')->store('cover', 'public');
         }else{
             $data['cover'] = $distribution->cover;
