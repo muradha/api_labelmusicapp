@@ -54,16 +54,40 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, User $user)
     {
-        $data = $request->validated();
+        DB::beginTransaction();
+        try {
+            $data = $request->validated();
 
-        if (empty($data['password'])) unset($data['password']);
+            if($data['admin_approval'] === 'PROCESSING'){
+                throw new HttpResponseException(response()->json(['message' => 'User is already in PROCESSING state.'], 400));
+            }
 
-        $user->update($data);
+            if (Auth::user()->hasAnyRole('super-admin') && !empty($data['role']) && $user->hasAnyRole('user')) {
+                $user->syncRoles([$data['role']]);
+            }
 
-        return new UserResource($user);
+            if (empty($data['password'])) unset($data['password']);
+
+            $user->update($data);
+
+            DB::commit();
+
+            return new UserResource($user);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            if($th instanceof HttpResponseException){
+                throw $th;
+            }
+
+            return response()->json([
+                'message' => $th->getMessage(),
+            ], 500);
+        }
     }
 
-    public function updateStatus(Request $request, User $user){
+    public function updateStatus(Request $request, User $user)
+    {
         $data = $request->validate([
             'status' => 'required|string|in:APPROVED,REJECTED',
         ]);

@@ -13,14 +13,16 @@ return new class extends Migration
     {
         Schema::create('tracks', function (Blueprint $table) {
             $table->id();
-            $table->string('title', 250)->unique();
+            $table->string('title', 250);
             $table->string('file');
             $table->string('ISRC');
-            $table->string('version', 200);
+            $table->string('version', 200)->default('original');
             $table->enum('vocal', ['YES', 'NO'])->default('YES');
             $table->integer('preview')->unsigned()->nullable();
+            $table->string('explicit_content', 100);
+            $table->string('genre', 100);
             $table->string('lyric_language', 200)->nullable();
-            $table->integer('size')->unsigned()->nullable();
+            $table->longText('lyrics')->nullable();
             $table->foreignId('distribution_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "78ab8eea4424b0e6ca92dbf0cca468d6",
+    "content-hash": "088036b4920bbc70bda5f2db7a044197",
     "packages": [
         {
             "name": "brick/math",
@@ -5853,6 +5853,52 @@
                 "source": "https://github.com/tijsverkoyen/CssToInlineStyles/tree/v2.2.7"
             },
             "time": "2023-12-08T13:03:43+00:00"
+        },
+        {
+            "name": "tomlerendu/laravel-convert-case-middleware",
+            "version": "1.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tomlerendu/laravel-convert-case-middleware.git",
+                "reference": "2e5bfb460a5c28558c98d56c3446a687a775c877"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tomlerendu/laravel-convert-case-middleware/zipball/2e5bfb460a5c28558c98d56c3446a687a775c877",
+                "reference": "2e5bfb460a5c28558c98d56c3446a687a775c877",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "laravel/framework": "^5.2|^6.0|^7.0|^8.0|^9.0|^10",
+                "php": "^8.0|^8.1|^8.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^7.5|^10"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "TomLerendu\\LaravelConvertCaseMiddleware\\": "src/",
+                    "TomLerendu\\LaravelConvertCaseMiddleware\\Tests\\": "tests/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Tom Lerendu",
+                    "email": "tom.lerendu@gmail.com"
+                }
+            ],
+            "description": "Convert request and response keys to and from camel and snake case.",
+            "support": {
+                "issues": "https://github.com/tomlerendu/laravel-convert-case-middleware/issues",
+                "source": "https://github.com/tomlerendu/laravel-convert-case-middleware/tree/1.1.4"
+            },
+            "time": "2024-01-18T22:19:45+00:00"
         },
         {
             "name": "vlucas/phpdotenv",

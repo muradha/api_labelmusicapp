@@ -10,7 +10,10 @@ use App\Http\Resources\DistributionResource;
 use App\Models\Distribution;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+
+use function PHPSTORM_META\map;
 
 class DistributionController extends Controller
 {
@@ -28,10 +31,10 @@ class DistributionController extends Controller
     {
         $user = Auth::user();
 
-        if($user->hasAnyRole('admin', 'operator')) {
-            $distributions = Distribution::with(['artist', 'tracks'])->get();
+        if ($user->hasAnyRole('admin', 'operator', 'super-admin')) {
+            $distributions = Distribution::with(['artists', 'tracks'])->get();
         } else {
-            $distributions = Distribution::with(['artist', 'tracks'])->where('user_id', $user->id)->get();
+            $distributions = Distribution::with(['artists', 'tracks'])->where('user_id', $user->id)->get();
         }
 
         return new DistributionCollection($distributions);
@@ -42,19 +45,70 @@ class DistributionController extends Controller
      */
     public function store(StoreDistributionRequest $request)
     {
-        $data = $request->validated();
+        DB::beginTransaction();
 
-        if ($request->hasFile('cover')) {
-            $data['cover'] = $request->file('cover')->store('cover', 'public');
+        $uploadedCover = null;
+        $uploadedTracksFile = null;
+        try {
+            $data = $request->validated();
+
+            if ($request->hasFile('cover') || !empty($data['cover'])) {
+                $uploadedCover = Storage::disk('public')->put('cover', $data['cover']);
+            }
+
+            $data['cover'] = $uploadedCover;
+
+            $data['upc'] = $data['upc'] ?: rand(1000000000000, 9999999999999);
+
+            $data['user_id'] = Auth::user()->id;
+
+            $distribution = Distribution::create($data);
+
+            $tracks = collect($data['tracks'])->map(function ($item) {
+                if (empty($item['ISRC'])) {
+                    $item['ISRC'] = rand(100000000000000, 999999999999999);
+                }
+                if (!empty($item['release_file']) && $item['release_file']) {
+                    $item['file'] = Storage::disk('public')->put('tracks', $item['release_file']);
+                }
+                return $item;
+            });
+
+            $uploadedTracksFile = $tracks->pluck('file')->toArray();
+
+            $createdTracks = $distribution->tracks()->createMany($tracks->all());
+            $distribution->artists()->sync($data['artists']);
+
+            foreach ($createdTracks as $key => $track) {
+                $track->artists()->sync($data['tracks'][$key]['artists']);
+                $track->contributors()->sync($data['tracks'][$key]['contributors']);
+            }
+
+            $distribution->store()->create([
+                'platforms' => $data['platforms'],
+                'territories' => $data['territories'],
+            ]);
+
+            DB::commit();
+
+            return new DistributionResource($distribution);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            if ($uploadedCover && !empty($uploadedCover)) {
+                Storage::disk('public')->exists($uploadedCover) && Storage::disk('public')->delete($uploadedCover);
+            }
+
+            if ($uploadedTracksFile && count($uploadedTracksFile) > 0) {
+                foreach ($uploadedTracksFile as $key => $item) {
+                    if (!empty($item) && Storage::disk('public')->exists($item)) {
+                        Storage::disk('public')->delete($item);
+                    }
+                }
+            }
+
+            return response()->json(['message' => $th->getMessage()], 500);
         }
-
-        $data['upc'] = rand(1000000000000, 9999999999999);
-
-        $data['user_id'] = Auth::user()->id;
-        
-        $distribution = Distribution::create($data);
-
-        return new DistributionResource($distribution);
     }
 
     /**
@@ -62,7 +116,7 @@ class DistributionController extends Controller
      */
     public function show(Distribution $distribution): DistributionResource
     {
-        return new DistributionResource($distribution->load('artist'));
+        return new DistributionResource($distribution->load('artists', 'store'));
     }
 
     /**
@@ -70,24 +124,57 @@ class DistributionController extends Controller
      */
     public function update(UpdateDistributionRequest $request, Distribution $distribution)
     {
-        $data = $request->validated();
+        DB::beginTransaction();
 
-        if ($request->hasFile('cover')) {
-            if($distribution->cover && Storage::disk('public')->exists($distribution->cover)) {
-                Storage::disk('public')->delete($distribution->cover);
+        $uploadedCover = null;
+        try {
+            $data = $request->validated();
+
+            $isCoverExist = Storage::disk('public')->exists($distribution->cover);
+
+            if ((!empty($data['cover']) || $request->hasFile('cover')) && !$isCoverExist) {
+                if ($distribution->cover && $isCoverExist) {
+                    Storage::disk('public')->delete($distribution->cover);
+                }
+                $uploadedCover = Storage::disk('public')->put('cover', $data['cover']);
+            } else {
+                $uploadedCover = $distribution->cover;
             }
-            $data['cover'] = $request->file('cover')->store('cover', 'public');
-        }else{
-            $data['cover'] = $distribution->cover;
+
+            $data['cover'] = $uploadedCover;
+
+            if (empty($data['upc'])) {
+                $data['upc'] = empty($distribution->upc) ?: rand(1000000000000, 9999999999999);
+            }
+
+            $distribution->update($data);
+
+            $artists = collect($data['artists']);
+
+            $artists->transform(fn ($artist) => [
+                'artist_id' => $artist['id'],
+                'role' => $artist['role'],
+            ]);
+
+            $distribution->artists()->sync($artists);
+
+            $distribution->store()->update([
+                'platforms' => $data['platforms'],
+                'territories' => $data['territories'],
+            ]);
+
+            DB::commit();
+
+            return new DistributionResource($distribution->load('artists', 'store'));
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            if ($uploadedCover && !empty($uploadedCover)) {
+                Storage::disk('public')->exists($uploadedCover) && Storage::disk('public')->delete($uploadedCover);
+            }
+
+            return response()->json(['message' => $th->getMessage()], 500);
         }
-
-        if(!$distribution->upc){
-            $data['upc'] = rand(1000000000000, 9999999999999);
-        }
-
-        $distribution->update($data);
-
-        return new DistributionResource($distribution);
     }
 
     /**
@@ -100,7 +187,8 @@ class DistributionController extends Controller
         return new DistributionResource($distribution);
     }
 
-    public function updateStatus(Request $request, Distribution $distribution) : DistributionResource {
+    public function updateStatus(Request $request, Distribution $distribution): DistributionResource
+    {
         $data = $request->validate([
             'verification_status' => 'required|string|in:PENDING,REJECTED,APPROVED'
         ]);

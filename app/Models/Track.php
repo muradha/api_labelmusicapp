@@ -20,17 +20,22 @@ class Track extends Model
 
     public function platforms(): BelongsToMany
     {
-        return $this->belongsToMany(Platform::class, 'track_platform');
+        return $this->belongsToMany(Platform::class, 'track_platform')->withTimestamps();
     }
 
     public function authors()
     {
         return $this->hasMany(Author::class);
     }
-    public function contributors()
+    public function contributors(): BelongsToMany
     {
-        return $this->hasMany(Contributor::class);
+        return $this->belongsToMany(Contributor::class, 'contributor_track')->withPivot('role')->withTimestamps();
     }
+
+    public function artists() : BelongsToMany {
+        return $this->belongsToMany(Artist::class, 'artist_track')->withPivot('role')->withTimestamps();
+    }
+
     public function featurings()
     {
         return $this->hasMany(Featuring::class);

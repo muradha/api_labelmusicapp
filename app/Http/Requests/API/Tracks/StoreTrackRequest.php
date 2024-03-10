@@ -22,26 +22,20 @@ class StoreTrackRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string|max:250|unique:tracks,title',
+            'title' => 'required|string|max:250',
             'release_file' => 'required|file|mimes:wav,mp3|max:2048',
-            'version' => 'required|string|max:200',
-            'vocal' => 'nullable|in:YES,NO',
-            'preview' => 'nullable|numeric',
-            'lyric_language' => 'nullable|string|max:200',
-            'size' => 'nullable|numeric',
-            'distribution_id' => 'nullable|numeric|exists:distributions,id',
-            'music_stores' => 'nullable|array',
-            'music_stores.*' => 'numeric|exists:music_stores,id',
-            'authors' => 'required|array',
-            'authors.*.name' => 'string|max:250',
-            'featurings' => 'required|array',
-            'featurings.*.name' => 'string|max:250',
+            'version' => 'nullable|string|max:200',
+            'explicit_content' => 'required|string|max:200',
+            'genre' => 'required|string|max:100',
+            'lyric_language' => 'required|string|max:200',
+            'lyrics' => 'nullable|string|max:2000',
+            'isrc' => 'nullable|string|max:255',
+            'artists' => 'required|array',
+            'artists.*.id' => 'required|numeric|exists:artists,id',
+            'artists.*.role' => 'required|string|max:50',
             'contributors' => 'required|array',
-            'contributors.*.name' => 'string|max:250',
-            'producers' => 'required|array',
-            'producers.*.name' => 'string|max:250',
-            'composers' => 'required|array',
-            'composers.*.name' => 'string|max:250',
+            'contributors.*.id' => 'required|numeric|exists:contributors,id',
+            'contributors.*.role' => 'required|string|max:50',
         ];
     }
 }

@@ -24,16 +24,11 @@ class TrackResource extends JsonResource
             'isrc' => $this->ISRC,
             'file_url' => $file_url,
             'version' => $this->version,
-            'vocal' => $this->vocal,
-            'preview' => $this->preview,
             'lyric_language' => $this->lyric_language,
-            'size' => $this->size,
-            'authors' => $this->authors,
-            'producers' => $this->producers,
-            'contributors' => $this->contributors,
-            'composers' => $this->composers,
-            'featurings' => $this->featurings,
-            'music_stores' => $this->whenLoaded('musicStores', fn () => $this->musicStores->pluck('id')->toArray()),
+            'explicit_content' => $this->explicit_content,
+            'genre' => $this->genre,
+            'contributors' => $this->whenLoaded('contributors') ? ContributorResource::collection($this->contributors) : null,
+            'artists' => $this->whenLoaded('artists') ? ArtistResource::collection($this->artists) : null,
         ];
     }
 }

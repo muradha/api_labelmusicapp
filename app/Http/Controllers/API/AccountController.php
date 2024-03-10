@@ -9,6 +9,7 @@ use App\Http\Resources\AccountCollection;
 use App\Http\Resources\AccountResource;
 use App\Models\Account;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AccountController extends Controller
 {
@@ -17,7 +18,7 @@ class AccountController extends Controller
      */
     public function index()
     {
-        $accounts = Account::all();
+        $accounts = Account::with(['user', 'bank'])->get();
 
         return new AccountCollection($accounts);
     }
@@ -29,7 +30,7 @@ class AccountController extends Controller
     {
         $data = $request->validated();
 
-        $account = Account::create($data);
+        $account = Account::firstOrCreate(['user_id' => $data['user_id']], $data);
 
         return (new AccountResource($account))->response()->setStatusCode(201);
     }
@@ -60,6 +61,15 @@ class AccountController extends Controller
     public function destroy(Account $account)
     {
         $account->delete();
+
+        return new AccountResource($account);
+    }
+
+    public function getBalanceByUserLoggedIn()
+    {
+        $user = Auth::user();
+
+        $account = Account::where('user_id', $user->id)->first();
 
         return new AccountResource($account);
     }

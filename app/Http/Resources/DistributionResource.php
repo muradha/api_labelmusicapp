@@ -20,12 +20,15 @@ class DistributionResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
+            'artist_name' => $this->artist_name,
+            'version' => $this->version,
+            'genre' => $this->genre,
+            'lyric_language' => $this->lyric_language,
             'language_title' => $this->language_title,
             'release_type' => $this->release_type,
             'release_date' => $this->release_date,
             'release_date_original' => $this->release_date_original,
-            'explicit_content' => $this->explicit_content,
-            'UPC' => $this->UPC,
+            'upc' => $this->upc,
             'cover' => Storage::disk('public')->url($this->cover),
             'cover_url' => $cover_url,
             'country' => $this->country,
@@ -37,8 +40,10 @@ class DistributionResource extends JsonResource
             'submit_status' => $this->submit_status,
             'verification_status' => $this->verification_status,
             'description' => $this->description,
-            'tracks' => $this->tracks,
-            'artist' => $this->whenLoaded('artist'),
+            'platforms' => $this->whenLoaded('store') ? $this->store->platforms : null,
+            'territories' => $this->whenLoaded('store') ? $this->store->territories : null,
+            'artists' => ArtistResource::collection($this->whenLoaded('artists')),
+            // 'tracks' => $this->tracks,
         ];
     }
 }

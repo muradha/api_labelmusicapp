@@ -15,6 +15,7 @@ use App\Models\Featuring;
 use App\Models\Producer;
 use App\Models\Track;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class TrackController extends Controller
@@ -41,114 +42,34 @@ class TrackController extends Controller
      */
     public function store(StoreTrackRequest $request)
     {
-        $data = $request->validated();
+        DB::beginTransaction();
 
-        $distribution = Distribution::with('tracks')->findOrFail($data['distribution_id']);
+        $release_file = null;
+        try {
+            $data = $request->validated();
 
-        if ($distribution->tracks->count() >= 1 && $distribution->release_type === 'SINGLE') {
-            throw new HttpResponseException(response()->json([
-                'errors' => [
-                    'message' => 'Track already exists in distribution'
-                ],
-            ], 404));
+            $release_file = Storage::disk('public')->put('tracks', $data['release_file']);
+            $data['file'] = $release_file;
+
+            $data['ISRC'] = rand(100000000000000, 999999999999999);
+
+            $track = Track::create($data);
+
+            $track->artists()->attach(collect($data['artists'])->map(fn ($item) => ['artist_id' => $item['id'], 'role' => $item['role']])->all());
+            $track->contributors()->attach(collect($data['contributors'])->map(fn ($item) => ['contributor_id' => $item['id'], 'role' => $item['role']])->all());
+
+            DB::commit();
+
+            return (new TrackResource($track->load('contributors', 'artists')))->response()->setStatusCode(201);
+        } catch (\Throwable $th) {
+            if ($release_file && Storage::disk('public')->exists($release_file)) {
+                Storage::disk('public')->delete($release_file);
+            }
+
+            DB::rollBack();
+
+            return response()->json(['message' => $th->getMessage()], 500);
         }
-
-        if ($request->hasFile('release_file')) {
-            $data['file'] = $request->file('release_file')->store('tracks', 'public');
-        }
-
-        $data['ISRC'] = rand(100000000000000, 999999999999999);
-
-        $track = Track::create($data);
-
-        if (!empty($data['authors'])) {
-            foreach ($request->authors as $key => $item) {
-                $authors[] = [
-                    'id' => $key,
-                    'name' => $item['name'],
-                    'track_id' => $track->id,
-                ];
-            }
-
-            if (!empty($authors[0]['name'])) {
-                $authors_id = collect($authors)->pluck('id');
-                $track->authors()->whereNotIn('id', $authors_id)->delete();
-                Author::upsert($authors, ['id', 'track_id'], ['name']);
-            }
-        }
-
-
-        if (!empty($data['featurings'])) {
-            foreach ($request->featurings as $key => $item) {
-                $featurings[] = [
-                    'id' => $key,
-                    'name' => $item['name'],
-                    'track_id' => $track->id,
-                ];
-            }
-
-            if (!empty($featurings[0]['name'])) {
-                $featurings_id = collect($featurings)->pluck('id');
-                $track->featurings()->whereNotIn('id', $featurings_id)->delete();
-                Featuring::upsert($featurings, ['id', 'track_id'], ['name']);
-            }
-        }
-
-
-        if (!empty($data['producers'])) {
-            foreach ($request->producers as $key => $item) {
-                $producers[] = [
-                    'id' => $key,
-                    'name' => $item['name'],
-                    'track_id' => $track->id,
-                ];
-            }
-
-            if (!empty($producers[0]['name'])) {
-                $producers_id = collect($producers)->pluck('id');
-                $track->producers()->whereNotIn('id', $producers_id)->delete();
-                Producer::upsert($producers, ['id', 'track_id'], ['name']);
-            }
-        }
-
-        if (!empty($data['contributors'])) {
-            foreach ($request->contributors as $key => $item) {
-                $contributors[] = [
-                    'id' => $key,
-                    'name' => $item['name'],
-                    'track_id' => $track->id,
-                ];
-            }
-
-            if (!empty($contributors[0]['name'])) {
-                $contributors_id = collect($contributors)->pluck('id');
-                $track->contributors()->whereNotIn('id', $contributors_id)->delete();
-                Contributor::upsert($contributors, ['id', 'track_id'], ['name']);
-            }
-        }
-
-        if (!empty($data['composers'])) {
-            foreach ($request->composers as $key => $item) {
-                $composers[] = [
-                    'id' => $key,
-                    'name' => $item['name'],
-                    'track_id' => $track->id,
-                ];
-            }
-
-            if (!empty($composers[0]['name'])) {
-                $composers_id = collect($composers)->pluck('id');
-                $track->composers()->whereNotIn('id', $composers_id)->delete();
-                Composer::upsert($composers, ['id', 'track_id'], ['name']);
-            }
-        }
-        if (empty($data['music_stores'])) {
-            $data['music_stores'] = [];
-        }
-
-        $track->musicStores()->sync($data['music_stores']);
-
-        return (new TrackResource($track->load('music_stores')))->response()->setStatusCode(201);
     }
 
     /**
@@ -156,13 +77,13 @@ class TrackController extends Controller
      */
     public function show(Track $track)
     {
-        $data = $track->load('authors', 'featurings', 'producers', 'contributors', 'composers', 'musicStores');
+        $data = $track->load('contributors', 'artists');
         return new TrackResource($data);
     }
 
     public function showTracksByDistributionId(Distribution $distribution): TrackCollection
     {
-        $tracks = Track::with(['authors', 'featurings', 'producers', 'contributors', 'composers', 'musicStores'])->where('distribution_id', $distribution->id)->get();
+        $tracks = Track::with(['contributors', 'artists'])->where('distribution_id', $distribution->id)->get();
 
         return new TrackCollection($tracks);
     }
@@ -172,117 +93,42 @@ class TrackController extends Controller
      */
     public function update(UpdateTrackRequest $request, Track $track)
     {
-        $data = $request->validated();
+        DB::beginTransaction();
 
-        if ($request->hasFile('release_file')) {
-            if ($track->file && Storage::disk('public')->exists($track->file)) {
-                Storage::disk('public')->delete($track->file);
+        $release_file = null;
+        try {
+            $data = $request->validated();
+
+            if (empty($data['release_file'])) {
+                $data['file'] = $track->file;
+            } else {
+                if ($track->file && Storage::disk('public')->exists($track->file)) {
+                    Storage::disk('public')->delete($track->file);
+                }
+
+                $release_file = Storage::disk('public')->put('tracks', $data['release_file']);
+                $data['file'] = $release_file;
             }
-            $data['file'] = $request->file('release_file')->store('tracks', 'public');
-        } else {
-            $data['file'] = $track->file;
+
+            $data['ISRC'] = rand(100000000000000, 999999999999999);
+
+            $track->update($data);
+
+            $track->artists()->sync(collect($data['artists'])->map(fn ($item) => ['artist_id' => $item['id'], 'role' => $item['role']])->all());
+            $track->contributors()->sync(collect($data['contributors'])->map(fn ($item) => ['contributor_id' => $item['id'], 'role' => $item['role']])->all());
+
+            DB::commit();
+
+            return (new TrackResource($track->load('contributors', 'artists')))->response()->setStatusCode(201);
+        } catch (\Throwable $th) {
+            if ($release_file && Storage::disk('public')->exists($release_file)) {
+                Storage::disk('public')->delete($release_file);
+            }
+
+            DB::rollBack();
+
+            return response()->json(['message' => $th->getMessage()], 500);
         }
-
-        $isSuccess = $track->update($data);
-
-        if (!$isSuccess) {
-            throw new HttpResponseException(response()->json([
-                'errors' => [
-                    'message' => 'Track not found'
-                ],
-            ], 404));
-        }
-
-        if (!empty($data['authors'])) {
-            foreach ($request->authors as $key => $item) {
-                $authors[] = [
-                    'id' => $key,
-                    'name' => $item['name'],
-                    'track_id' => $track->id,
-                ];
-            }
-
-            if (!empty($authors[0]['name'])) {
-                $authors_id = collect($authors)->pluck('id');
-                $track->authors()->whereNotIn('id', $authors_id)->delete();
-                Author::upsert($authors, ['id', 'track_id'], ['name']);
-            }
-        }
-
-
-        if (!empty($data['featurings'])) {
-            foreach ($request->featurings as $key => $item) {
-                $featurings[] = [
-                    'id' => $key,
-                    'name' => $item['name'],
-                    'track_id' => $track->id,
-                ];
-            }
-
-            if (!empty($featurings[0]['name'])) {
-                $featurings_id = collect($featurings)->pluck('id');
-                $track->featurings()->whereNotIn('id', $featurings_id)->delete();
-                Featuring::upsert($featurings, ['id', 'track_id'], ['name']);
-            }
-        }
-
-
-        if (!empty($data['producers'])) {
-            foreach ($request->producers as $key => $item) {
-                $producers[] = [
-                    'id' => $key,
-                    'name' => $item['name'],
-                    'track_id' => $track->id,
-                ];
-            }
-
-            if (!empty($producers[0]['name'])) {
-                $producers_id = collect($producers)->pluck('id');
-                $track->producers()->whereNotIn('id', $producers_id)->delete();
-                Producer::upsert($producers, ['id', 'track_id'], ['name']);
-            }
-        }
-
-        if (!empty($data['contributors'])) {
-            foreach ($request->contributors as $key => $item) {
-                $contributors[] = [
-                    'id' => $key,
-                    'name' => $item['name'],
-                    'track_id' => $track->id,
-                ];
-            }
-
-            if (!empty($contributors[0]['name'])) {
-                $contributors_id = collect($contributors)->pluck('id');
-                $track->contributors()->whereNotIn('id', $contributors_id)->delete();
-                Contributor::upsert($contributors, ['id', 'track_id'], ['name']);
-            }
-        }
-
-        if (!empty($data['composers'])) {
-            foreach ($request->composers as $key => $item) {
-                $composers[] = [
-                    'id' => $key,
-                    'name' => $item['name'],
-                    'track_id' => $track->id,
-                ];
-            }
-
-            if (!empty($composers[0]['name'])) {
-                $composers_id = collect($composers)->pluck('id');
-                $track->composers()->whereNotIn('id', $composers_id)->delete();
-                Composer::upsert($composers, ['id', 'track_id'], ['name']);
-            }
-        }
-
-        if (empty($data['music_stores'])) {
-            $data['music_stores'] = [];
-        }
-
-        $track->musicStores()->sync($data['music_stores']);
-
-
-        return new TrackResource($track->load('musicStores'));
     }
 
     /**

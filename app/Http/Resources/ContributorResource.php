@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class AccountResource extends JsonResource
+class ContributorResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,10 +16,8 @@ class AccountResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'account_number' => $this->account_number,
-            'balance' => $this->balance,
-            'username' => $this->whenLoaded('user', fn () => $this->user->name),
-            'bank' => $this->whenLoaded('bank', fn () => $this->bank->name)
+            'name' => $this->name,
+            'role' => $this->whenPivotLoaded('contributor_track', fn() => $this->pivot->role),
         ];
     }
 }

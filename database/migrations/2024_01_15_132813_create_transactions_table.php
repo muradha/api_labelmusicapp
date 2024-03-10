@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('income')->default(0);
             $table->integer('pay')->default(0);
             $table->dateTime('create_time')->default(now());
+            $table->morphs('transactionable');
             $table->foreignId('account_id')->constrained()->cascadeOnUpdate()->cascadeOnDelete();
             $table->timestamps();
         });

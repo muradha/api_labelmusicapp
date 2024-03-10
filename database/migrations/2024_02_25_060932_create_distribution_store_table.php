@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('contributors', function (Blueprint $table) {
+        Schema::create('distribution_store', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 250);
+            $table->json('platforms');
+            $table->json('territories');
+            $table->foreignId('distribution_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -23,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('contributors');
+        Schema::dropIfExists('distribution_store');
     }
 };

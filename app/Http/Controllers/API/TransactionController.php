@@ -7,9 +7,12 @@ use App\Http\Requests\API\Transactions\StoreTransactionRequest;
 use App\Http\Requests\API\Transactions\UpdateTransactionRequest;
 use App\Http\Resources\TransactionCollection;
 use App\Http\Resources\TransactionResource;
+use App\Models\Deposit;
 use App\Models\Transaction;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
@@ -70,5 +73,60 @@ class TransactionController extends Controller
         $transaction->delete();
 
         return new TransactionResource($transaction);
+    }
+
+    public function debit(Request $request, Transaction $transaction, StoreTransactionRequest $transaction_request)
+    {
+        $data_transaction = $transaction_request->validated();
+        $data_deposit = $request->validate([
+            'label_name' => 'required|string|max:100',
+            'artist_name' => 'required|string|max:100',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $deposit = Deposit::create($data_deposit);
+
+            $data_transaction['transactionable_type'] = Deposit::class;
+            $data_transaction['transactionable_id'] = $deposit->id;
+
+            $transaction = Transaction::create($data_transaction);
+
+            if ($transaction->income > 0 && $transaction->pay > 0) {
+                $total = $transaction->income - $transaction->pay;
+
+                $transaction->account()->update(
+                    [
+                        'balance' => $transaction->account->balance + $total
+                    ]
+                );
+            } elseif ($transaction->income > 0) {
+                $transaction->account()->update(
+                    [
+                        'balance' => $transaction->account->balance + $transaction->income
+                    ]
+                );
+            } else {
+                $transaction->account()->update(
+                    [
+                        'balance' => $transaction->account->balance - $transaction->pay
+                    ]
+                );
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'data' => $transaction->account,
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $th->getMessage()
+            ]);
+        }
     }
 }

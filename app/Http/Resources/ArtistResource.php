@@ -22,6 +22,8 @@ class ArtistResource extends JsonResource
             'lastName' => $this->last_name,
             'email' => $this->email,
             'photo' => Storage::disk('public')->url($this->photo),
+            'role' => $this->whenPivotLoaded('artist_track', fn () => $this->pivot->role),
+            'role' => $this->whenPivotLoaded('artist_distribution', fn () => $this->pivot->role),
         ];
     }
 }

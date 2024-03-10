@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Distribution extends Model
 {
@@ -24,11 +26,15 @@ class Distribution extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function artist(): BelongsTo{
-        return $this->belongsTo(Artist::class, 'artist_id', 'id');
-    }
-
     public function tracks(): HasMany {
         return $this->hasMany(Track::class);
+    }
+
+    public function store(): HasOne {
+        return $this->hasOne(DistributionStore::class, 'distribution_id');
+    }
+
+    public function artists() : BelongsToMany {
+        return $this->belongsToMany(Artist::class, 'artist_distribution')->withPivot('role')->withTimestamps();
     }
 }

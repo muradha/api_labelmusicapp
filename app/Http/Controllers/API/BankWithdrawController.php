@@ -7,9 +7,14 @@ use App\Http\Requests\API\Withdraws\StoreBankWithdrawRequest;
 use App\Http\Requests\API\Withdraws\UpdateBankWithdrawRequest;
 use App\Http\Resources\Withdraws\BankWithdrawCollection;
 use App\Http\Resources\Withdraws\BankWithdrawResource;
+use App\Models\Account;
 use App\Models\BankWithdraw;
+use App\Models\Transaction;
 use App\Models\Withdraw;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class BankWithdrawController extends Controller
 {
@@ -38,18 +43,53 @@ class BankWithdrawController extends Controller
      */
     public function store(StoreBankWithdrawRequest $request)
     {
-        $data = $request->validated();
+        DB::beginTransaction();
+        try {
+            $data = $request->validated();
 
-        $data['user_id'] = Auth::user()->id;
-        $bankWithdraw = BankWithdraw::create($data);
+            $user = Auth::user();
+            $account = Account::where('user_id', $user->id)->first();
 
-        if ($bankWithdraw) {
-            $data['withdrawable_id'] = $bankWithdraw->id;
-            $data['withdrawable_type'] = BankWithdraw::class;
-            $withdraw = Withdraw::create($data);
+            if (!$account || empty($account)) {
+                throw new HttpResponseException(response()->json(['message' => 'Account not found'], 404));
+            }
+
+            if ($account->balance < $data['amount']) {
+                throw new HttpResponseException(response()->json(['message' => 'Insufficient balance.'], 400));
+            };
+
+            $data['user_id'] = $user->id;
+            $bankWithdraw = BankWithdraw::create($data);
+
+            if ($bankWithdraw) {
+                $data['withdrawable_id'] = $bankWithdraw->id;
+                $data['withdrawable_type'] = BankWithdraw::class;
+                $withdraw = Withdraw::create($data);
+
+                $transaction = Transaction::create([
+                    'period' => now(),
+                    'pay' => $data['amount'],
+                    'transactionable_type' => Withdraw::class,
+                    'transactionable_id' => $withdraw->id,
+                    'account_id' => $account->id
+                ]);
+
+                if ($transaction->pay > 0) {
+                    $transaction->account()->update(
+                        [
+                            'balance' => $transaction->account->balance - $transaction->pay
+                        ]
+                    );
+                }
+            }
+
+            DB::commit();
+
+            return new BankWithdrawResource($bankWithdraw->load('withdraw'));
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response()->json(['message' => $th->getMessage()], 500);
         }
-
-        return new BankWithdrawResource($bankWithdraw->load('withdraw'));
     }
 
     public function update(UpdateBankWithdrawRequest $request, BankWithdraw $bank)
@@ -72,4 +112,48 @@ class BankWithdrawController extends Controller
 
         return new BankWithdrawResource($data);
     }
+
+    public function updateStatusWithdraw(BankWithdraw $bank, Request $request) {
+        DB::beginTransaction();
+        try {
+            $data = $request->validate([
+                'status' => 'required|string|in:APPROVED,REJECTED',
+            ]);
+
+            $account = Account::where('user_id', $bank->user_id)->first();
+
+            if ($bank->withdraw->status === 'PROCESSING') {
+                if ($data['status'] === 'REJECTED') {
+                    $account->update([
+                        'balance' => $bank->withdraw->amount + $account->balance,
+                    ]);
+                }
+            } else {
+                throw new HttpResponseException(
+                    response()->json(
+                        ['message' => 'The withdrawal has already been processed.'],
+                        400
+                    )
+                );
+            }
+
+            $bank->withdraw()->update([
+                'status' => $data['status']
+            ]);
+
+            DB::commit();
+
+            return new BankWithdrawResource($bank->load('withdraw'));
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            if($th instanceof HttpResponseException) {
+                throw $th;
+            }
+
+            return response()->json(['message' => $th->getMessage()], 500);
+        }
+
+    }
+    
 }

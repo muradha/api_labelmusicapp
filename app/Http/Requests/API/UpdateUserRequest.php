@@ -30,7 +30,8 @@ class UpdateUserRequest extends FormRequest
                 Rule::unique('users', 'email')->ignore($this->user)
             ],
             'password' => ['nullable', Password::defaults(), 'max:254'],
-            'admin_approval' => 'required|string|in:APPROVED,REJECTED,PENDING'
+            'admin_approval' => 'nullable|string|in:APPROVED,REJECTED,PENDING',
+            'role' => 'nullable|string|in:admin,operator',
         ];
     }
 }
