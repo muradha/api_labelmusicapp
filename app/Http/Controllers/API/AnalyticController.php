@@ -17,8 +17,8 @@ use Illuminate\Support\Facades\Validator;
 class AnalyticController extends Controller
 {
     public function __construct(){
-        $this->middleware(['role:admin|user']);
-        $this->middleware(['role:user'], ['only' => 'index', 'showByPeriodAndArtist']);
+        $this->middleware(['role:super-admin|admin|user']);
+        // $this->middleware(['role:user'], ['only' => 'index', 'showByPeriodAndArtist']);
     }
     /**
      * Display a listing of the resource.

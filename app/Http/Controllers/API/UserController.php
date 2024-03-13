@@ -23,7 +23,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with('profile')->whereHas('roles', fn ($query) => $query->where('name', 'user'))->get();
+        $users = User::with('profile')->whereHas('roles', fn ($query) => $query->where('name', 'user')->orWhere('name', 'sub-user'))->get();
 
         return new UserCollection($users);
     }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\SubUser\AuthController as SubUserAuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,3 +20,7 @@ Route::get('/', function () {
 });
 
 Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verify'])->middleware(['signed'])->name('verification.verify');
+
+Route::get('/register/subuser/{token}', [SubUserAuthController::class, 'register'])->name('subuser.register');
+Route::post('/register/subuser/{token}', [SubUserAuthController::class, 'storeRegister'])->name('subuser.register.store');
+Route::get('/accept-invite/subuser/{token}', [SubUserAuthController::class, 'acceptInvite'])->name('subuser.accept-invite')->middleware(['signed']);

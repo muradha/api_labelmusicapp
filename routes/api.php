@@ -21,8 +21,10 @@ use App\Http\Controllers\API\PaypalWithdrawController;
 use App\Http\Controllers\API\PlatformController;
 use App\Http\Controllers\API\Services\PlaylistPitchController;
 use App\Http\Controllers\API\Services\YoutubeOacController;
+use App\Http\Controllers\SubUser\UserMemberController;
 use App\Http\Controllers\API\TrackController;
 use App\Http\Controllers\API\TransactionController;
+use App\Http\Controllers\SubUser\SubuserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -41,6 +43,10 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/admin/login', [AuthController::class, 'adminLogin']);
 
 Route::middleware(['auth:sanctum', 'adminApproval'])->group(function () {
+    Route::get('subusers', [SubuserController::class, 'index']);
+    Route::get('subusers/{id}', [SubuserController::class, 'show']);
+    Route::post('subusers/invite', [UserMemberController::class, 'invite']);
+
     Route::get('/dashboard/user', [DashboardController::class, 'user']);
 
     Route::get('/users/profile', [UserController::class, 'getProfile']);
@@ -73,7 +79,7 @@ Route::middleware(['auth:sanctum', 'adminApproval'])->group(function () {
     Route::get('analytics/{period}/artist/{artist}', [AnalyticController::class, 'showByPeriodAndArtist']);
 
     Route::apiResource('contributors', ContributorController::class);
-    
+
     Route::get('balance/user', [AccountController::class, 'getBalanceByUserLoggedIn']);
 
     Route::get('deposits', [TransactionController::class, 'getDebitTransactions'])->middleware(['role:super-admin']);
@@ -98,7 +104,7 @@ Route::middleware(['auth:sanctum', 'adminApproval'])->group(function () {
 
         Route::get('announcements', [AnnouncementController::class, 'index']);
         Route::post('announcements', [AnnouncementController::class, 'store']);
-        
+
         Route::apiResource('legals', LegalController::class)->except(['update', 'show']);
         Route::post('legals/bulk', [LegalController::class, 'bulkStore']);
 
