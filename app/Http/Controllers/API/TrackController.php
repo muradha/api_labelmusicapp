@@ -7,14 +7,8 @@ use App\Http\Requests\API\Tracks\StoreTrackRequest;
 use App\Http\Requests\API\Tracks\UpdateTrackRequest;
 use App\Http\Resources\TrackCollection;
 use App\Http\Resources\TrackResource;
-use App\Models\Author;
-use App\Models\Composer;
-use App\Models\Contributor;
 use App\Models\Distribution;
-use App\Models\Featuring;
-use App\Models\Producer;
 use App\Models\Track;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -77,8 +71,7 @@ class TrackController extends Controller
      */
     public function show(Track $track)
     {
-        $data = $track->load('contributors', 'artists');
-        return new TrackResource($data);
+        return new TrackResource($track->load('contributors', 'artists'));
     }
 
     public function showTracksByDistributionId(Distribution $distribution): TrackCollection

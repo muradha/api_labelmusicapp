@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\SubUser;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\OwnerResource;
+use App\Models\SubUser;
 use App\Models\User;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 use Mpociot\Teamwork\Facades\Teamwork;
 
 class UserMemberController extends Controller
@@ -14,6 +19,45 @@ class UserMemberController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+    }
+
+    public function inviteParent(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'user_id' => 'required|numeric|exists:users,id'
+            ]);
+
+            $user = User::where('id', $request->only('user_id'))->first();
+
+            if($user->isTeamOwner()){
+                throw new HttpResponseException(response()->json([
+                    'message' => 'User is a subusers parent'
+                ], 409));
+            }
+
+            if($user->hasAnyRole('super-admin', 'admin')){
+                throw new HttpResponseException(response()->json([
+                    'message' => 'User is not right roles'
+                ], 409));
+            }
+
+            $team = SubUser::create([
+                'owner_id' => $user->id,
+                'name' => $user->name . "'s Team",
+            ]);
+
+            $user->attachTeam($team);
+
+            DB::commit();
+
+            return new OwnerResource($user);
+        } catch (\Throwable $th) {
+            DB::rollback();
+
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
     }
 
     /**
@@ -24,13 +68,28 @@ class UserMemberController extends Controller
     {
         DB::beginTransaction();
         try {
+            $owner_id = null;
+            $user = Auth::user();
+
             $data = $request->validate([
-                'email' => 'required|email',
-                'owner_id' => 'required|numeric|max_digits:10|exists:teams,owner_id',
+                'email' => 'required|email|max:150',
+                'owner_id' => [Rule::requiredIf($user->hasAnyRole('admin', 'super-admin')), 'numeric', 'max_digits:10', 'exists:teams,owner_id'],
             ]);
 
+            if ($user->hasAnyRole('admin', 'super-admin')) {
+                $owner_id = $data['owner_id'];
+            }else{
+                $owner_id = $user->id;
+            }
+
             $teamModel = config('teamwork.team_model');
-            $team = $teamModel::where('owner_id', $data['owner_id'])->first();
+            $team = $teamModel::where('owner_id', $owner_id)->first();
+
+            if(!$team){
+                throw new HttpResponseException(response()->json([
+                    'message' => 'Owner not found'
+                ], 409));
+            }
 
             if (!Teamwork::hasPendingInvite($request->email, $team)) {
                 Teamwork::inviteToTeam($request->email, $team, function ($invite) {
@@ -48,7 +107,7 @@ class UserMemberController extends Controller
             return response()->json(['message' => 'Invited successfully.'], 201);
         } catch (\Throwable $th) {
             DB::rollback();
-            
+
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }

@@ -14,8 +14,7 @@ class YoutubeOacController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['role:admin|user']);
-        $this->middleware(['role:user'], ['only' => ['store']]);
+        $this->authorizeResource(YoutubeOac::class, 'youtube_oac');
     }
     /**
      * Display a listing of the resource.
@@ -36,7 +35,7 @@ class YoutubeOacController extends Controller
 
         $youtubeOac = YoutubeOac::create($data);
 
-        if($youtubeOac){
+        if ($youtubeOac) {
             $data['serviceable_id'] = $youtubeOac->id;
             $data['serviceable_type'] = YoutubeOac::class;
 
@@ -62,8 +61,8 @@ class YoutubeOacController extends Controller
         $data = $request->validated();
 
         $isSuccess = $youtube_oac->update($data);
-        
-        if($isSuccess && $youtube_oac->service){
+
+        if ($isSuccess && $youtube_oac->service) {
             $youtube_oac->service->update($data);
         }
 

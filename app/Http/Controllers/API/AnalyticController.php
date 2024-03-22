@@ -86,7 +86,7 @@ class AnalyticController extends Controller
             $analytic->stores()->sync($data['shops']);
         }
 
-        return (new AnalyticResource($analytic->load('artist')))->response()->setStatusCode(201);
+        return (new AnalyticResource($analytic->load('artist', 'stores')))->response()->setStatusCode(201);
     }
 
     /**

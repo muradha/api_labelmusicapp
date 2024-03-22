@@ -38,92 +38,102 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/admin/login', [AuthController::class, 'adminLogin']);
+Route::middleware(['guest'])->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('admin/login', [AuthController::class, 'adminLogin']);
+    Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:6,1');
+    Route::post('reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:6,1');
+});
 
-Route::middleware(['auth:sanctum', 'adminApproval'])->group(function () {
-    Route::get('subusers', [SubuserController::class, 'index']);
-    Route::get('subusers/{id}', [SubuserController::class, 'show']);
-    Route::post('subusers/invite', [UserMemberController::class, 'invite']);
-
-    Route::get('/dashboard/user', [DashboardController::class, 'user']);
-
-    Route::get('/users/profile', [UserController::class, 'getProfile']);
-    Route::put('/users/profile', [UserController::class, 'updateProfile']);
-
-    Route::post('/logout', [AuthController::class, 'logout']);
-
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/email/verify', [AuthController::class, 'notice'])->name('verification.notice');
-    Route::post('/email/verification-notification', [AuthController::class, 'resend'])->middleware(['throttle:6,1'])->name('verification.send');
+    Route::post('/email/verification-notification', [AuthController::class, 'resend'])->middleware(['throttle:6,1', 'auth:sanctum'])->name('verification.send');
 
-    /* Artworks */
-    Route::get('artworks/generate', [ArtworkTemplateController::class, 'generate']);
+    Route::post('logout', [AuthController::class, 'logout']);
 
-    /* Withdraws */
-    Route::put('withdraw/paypal/{paypal}/status', [PaypalWithdrawController::class, 'updateStatusWithdraw'], ['as' => 'withdraw'])->middleware(['role:super-admin']);
-    Route::apiResource('withdraw/paypal', PaypalWithdrawController::class, ['as' => 'withdraw'])->except('show');
+    Route::middleware(['adminApproval'])->group(function () {
+        Route::get('subusers', [SubuserController::class, 'index']);
+        Route::get('subusers/{id}', [SubuserController::class, 'show']);
+        Route::post('subusers/invite', [UserMemberController::class, 'invite']);
 
-    Route::put('withdraw/banks/{bank}/status', [BankWithdrawController::class, 'updateStatusWithdraw'], ['as' => 'withdraw'])->middleware(['role:super-admin']);
-    Route::apiResource('withdraw/banks', BankWithdrawController::class, ['as' => 'withdraw'])->except('show');
+        Route::get('dashboard/user', [DashboardController::class, 'user']);
 
-    Route::get('announcements/notification', [AnnouncementController::class, 'notification']);
+        Route::get('users/profile', [UserController::class, 'getProfile']);
+        Route::put('users/profile', [UserController::class, 'updateProfile']);
 
-    Route::get('users/notifications', [UserController::class, 'unreadNotification']);
-    Route::post('users/notifications', [UserController::class, 'readNotification']);
+        /* Artworks */
+        Route::get('artworks/generate', [ArtworkTemplateController::class, 'generate']);
 
-    Route::patch('distributions/{distribution}/status', [DistributionController::class, 'updateStatus'])->middleware(['role:admin|super-admin']);
+        /* Withdraws */
+        Route::put('withdraw/paypal/{paypal}/status', [PaypalWithdrawController::class, 'updateStatusWithdraw'], ['as' => 'withdraw'])->middleware(['role:super-admin']);
+        Route::apiResource('withdraw/paypal', PaypalWithdrawController::class, ['as' => 'withdraw'])->except('show');
 
-    Route::patch('users/{user}/status', [UserController::class, 'updateStatus'])->middleware(['role:admin']);
+        Route::put('withdraw/banks/{bank}/status', [BankWithdrawController::class, 'updateStatusWithdraw'], ['as' => 'withdraw'])->middleware(['role:super-admin']);
+        Route::apiResource('withdraw/banks', BankWithdrawController::class, ['as' => 'withdraw'])->except('show');
 
-    Route::get('analytics/{period}/artist/{artist}', [AnalyticController::class, 'showByPeriodAndArtist']);
+        Route::get('announcements/notification', [AnnouncementController::class, 'notification']);
+        Route::get('users/notifications', [UserController::class, 'unreadNotification']);
+        Route::post('users/notifications', [UserController::class, 'readNotification']);
 
-    Route::apiResource('contributors', ContributorController::class);
+        Route::patch('distributions/{distribution}/status', [DistributionController::class, 'updateStatus'])->middleware(['role:admin|super-admin']);
 
-    Route::get('balance/user', [AccountController::class, 'getBalanceByUserLoggedIn']);
+        Route::patch('users/{user}/status', [UserController::class, 'updateStatus'])->middleware(['role:admin']);
 
-    Route::get('deposits', [TransactionController::class, 'getDebitTransactions'])->middleware(['role:super-admin']);
-    Route::post('deposits/transaction', [TransactionController::class, 'debit'])->middleware(['role:super-admin']);
+        Route::get('analytics/{period}/artist/{artist}', [AnalyticController::class, 'showByPeriodAndArtist']);
 
-    Route::apiResources([
-        'tracks' => TrackController::class,
-        'distributions' => DistributionController::class,
-        'analytics' => AnalyticController::class,
-        'artists' => ArtistController::class,
-        'transactions' => TransactionController::class,
-        'services/playlist-pitches' => PlaylistPitchController::class,
-        'services/youtube-oac' => YoutubeOacController::class
-    ]);
+        Route::apiResource('contributors', ContributorController::class);
 
-    Route::get('distributions/{distribution}/tracks', [TrackController::class, 'showTracksByDistributionId']);
+        Route::get('balance/user', [AccountController::class, 'getBalanceByUserLoggedIn']);
 
-    Route::group(['middleware' => ['role:admin|super-admin']], function () {
-        Route::get('/dashboard/admin', [DashboardController::class, 'admin']);
-
-        Route::get('/users/log', [UserController::class, 'getUsersWithLog']);
-
-        Route::get('announcements', [AnnouncementController::class, 'index']);
-        Route::post('announcements', [AnnouncementController::class, 'store']);
-
-        Route::apiResource('legals', LegalController::class)->except(['update', 'show']);
-        Route::post('legals/bulk', [LegalController::class, 'bulkStore']);
-
-        Route::apiResource('artworks', ArtworkTemplateController::class)->except(['show', 'generate']);
+        Route::get('deposits', [TransactionController::class, 'getDebitTransactions'])->middleware(['role:super-admin']);
+        Route::post('deposits/transaction', [TransactionController::class, 'debit'])->middleware(['role:super-admin']);
 
         Route::apiResources([
-            'accounts' => AccountController::class,
-            'stores' => MusicStoreController::class,
-            'platforms' => PlatformController::class,
-            'users' => UserController::class,
-            'genres' => GenreController::class,
-            'banks' => BankController::class,
+            'tracks' => TrackController::class,
+            'distributions' => DistributionController::class,
+            'analytics' => AnalyticController::class,
+            'artists' => ArtistController::class,
+            'transactions' => TransactionController::class,
+            'services/playlist-pitches' => PlaylistPitchController::class,
+            'services/youtube-oac' => YoutubeOacController::class
         ]);
-    });
 
-    Route::middleware(['role:super-admin'])->group(function () {
-        Route::apiResources([
-            'admins' => AdminController::class,
-            'operators' => OperatorController::class,
-        ]);
+        Route::get('distributions/{distribution}/tracks', [TrackController::class, 'showTracksByDistributionId']);
+
+        Route::get('genres', [GenreController::class, 'index']);
+        Route::get('platforms', [PlatformController::class, 'index']);
+
+        Route::group(['middleware' => ['role:admin|super-admin']], function () {
+            Route::get('dashboard/admin', [DashboardController::class, 'admin']);
+
+            Route::get('users/log', [UserController::class, 'getUsersWithLog']);
+
+            Route::get('announcements', [AnnouncementController::class, 'index']);
+            Route::post('announcements', [AnnouncementController::class, 'store']);
+
+            Route::apiResource('legals', LegalController::class)->except(['update', 'show']);
+            Route::post('legals/bulk', [LegalController::class, 'bulkStore']);
+
+            Route::apiResource('artworks', ArtworkTemplateController::class)->except(['show', 'generate']);
+            Route::apiResource('genres', GenreController::class)->except(['index']);
+            Route::apiResource('platforms', PlatformController::class)->except('index');
+
+            Route::apiResources([
+                'accounts' => AccountController::class,
+                'stores' => MusicStoreController::class,
+                'users' => UserController::class,
+                'banks' => BankController::class,
+            ]);
+        });
+
+        Route::middleware(['role:super-admin'])->group(function () {
+            Route::apiResources([
+                'admins' => AdminController::class,
+                'operators' => OperatorController::class,
+            ]);
+            Route::get('parents', [SubuserController::class, 'subUserParents']);
+            Route::post('parents/invite', [UserMemberController::class, 'inviteParent']);
+        });
     });
 });

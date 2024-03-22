@@ -36,6 +36,7 @@ class StoreTrackRequest extends FormRequest
             'contributors' => 'required|array',
             'contributors.*.id' => 'required|numeric|exists:contributors,id',
             'contributors.*.role' => 'required|string|max:50',
+            'distribution_id' => 'required|numeric|exists:distributions,id'
         ];
     }
 }

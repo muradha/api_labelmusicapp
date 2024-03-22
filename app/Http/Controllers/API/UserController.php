@@ -58,7 +58,7 @@ class UserController extends Controller
         try {
             $data = $request->validated();
 
-            if($data['admin_approval'] === 'PROCESSING'){
+            if ($data['admin_approval'] === 'PROCESSING') {
                 throw new HttpResponseException(response()->json(['message' => 'User is already in PROCESSING state.'], 400));
             }
 
@@ -68,15 +68,16 @@ class UserController extends Controller
 
             if (empty($data['password'])) unset($data['password']);
 
+            $user->profile()->updateOrCreate(['user_id' => $user->id], $data);
             $user->update($data);
 
             DB::commit();
 
-            return new UserResource($user);
+            return new UserResource($user->load('profile'));
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            if($th instanceof HttpResponseException){
+            if ($th instanceof HttpResponseException) {
                 throw $th;
             }
 
@@ -194,6 +195,6 @@ class UserController extends Controller
             $data
         );
 
-        return new UserResource($user);
+        return new UserResource($user->load('profile'));
     }
 }

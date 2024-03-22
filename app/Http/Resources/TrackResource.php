@@ -27,8 +27,8 @@ class TrackResource extends JsonResource
             'lyric_language' => $this->lyric_language,
             'explicit_content' => $this->explicit_content,
             'genre' => $this->genre,
-            'contributors' => $this->whenLoaded('contributors') ? ContributorResource::collection($this->contributors) : null,
-            'artists' => $this->whenLoaded('artists') ? ArtistResource::collection($this->artists) : null,
+            'contributors' => $this->whenLoaded('contributors') ? ContributorResource::collection($this->contributors) : [],
+            'artists' => $this->whenLoaded('artists') ? ArtistResource::collection($this->artists) : [],
         ];
     }
 }

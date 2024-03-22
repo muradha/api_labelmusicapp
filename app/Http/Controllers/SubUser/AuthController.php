@@ -4,7 +4,6 @@ namespace App\Http\Controllers\SubUser;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UserRegisterRequest;
-use App\Models\SubUser;
 use App\Models\User;
 use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +21,24 @@ class AuthController extends Controller
                 throw new InvalidSignatureException();
             }
         }
+
+        $user = User::where('email', $invite->email)->first();
+
+        if ($user) {
+            if ($invite) {
+                $user->attachTeam($invite->team);
+                $invite->delete();
+            } 
+
+            $user->syncRoles(['sub-user']);
+
+            $emails = DB::table('team_invites')->where('email', $user->email)->pluck('id')->toArray();
+
+            DB::table('team_invites')->whereIn('id', $emails)->delete();
+
+            return view('subuser.accept-invite');
+        }
+
         return view('subuser.register', [
             'token' => $token,
         ]);
@@ -52,13 +69,6 @@ class AuthController extends Controller
             if ($invite) {
                 $user->attachTeam($invite->team);
                 $invite->delete();
-            } else {
-                $team = SubUser::create([
-                    'owner_id' => $user->id,
-                    'name' => $user->name . "'s Team",
-                ]);
-
-                $user->attachTeam($team);
             }
 
             $user->syncRoles(['sub-user']);

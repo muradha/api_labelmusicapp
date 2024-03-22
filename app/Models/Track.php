@@ -6,12 +6,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Storage;
+
+use function Illuminate\Events\queueable;
 
 class Track extends Model
 {
     use HasFactory;
 
     protected $guarded = ['id'];
+
+    protected static function booted()
+    {
+        static::deleted(queueable(function (Track $audioTrack) {
+            if(Storage::disk('public')->exists($audioTrack->file)) Storage::disk('public')->delete($audioTrack->file);
+        }));
+    }
 
     public function distribution(): BelongsTo
     {
@@ -32,8 +42,9 @@ class Track extends Model
         return $this->belongsToMany(Contributor::class, 'contributor_track')->withPivot('role')->withTimestamps();
     }
 
-    public function artists() : BelongsToMany {
-        return $this->belongsToMany(Artist::class, 'artist_track')->withPivot('role')->withTimestamps();
+    public function artists(): BelongsToMany
+    {
+        return $this->belongsToMany(Artist::class, 'artist_track')->withPivot('role');
     }
 
     public function featurings()

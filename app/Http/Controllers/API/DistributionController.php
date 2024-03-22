@@ -13,8 +13,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-use function PHPSTORM_META\map;
-
 class DistributionController extends Controller
 {
     /**
@@ -34,7 +32,7 @@ class DistributionController extends Controller
         if ($user->hasAnyRole('admin', 'operator', 'super-admin')) {
             $distributions = Distribution::with(['artists', 'tracks'])->get();
         } else {
-            $distributions = Distribution::with(['artists', 'tracks'])->where('user_id', $user->id)->get();
+            $distributions = Distribution::with(['artists', 'tracks'])->where('user_id', $user->id)->orWhere('user_id', $user->currentTeam->owner->id)->get();
         }
 
         return new DistributionCollection($distributions);
@@ -77,7 +75,15 @@ class DistributionController extends Controller
             $uploadedTracksFile = $tracks->pluck('file')->toArray();
 
             $createdTracks = $distribution->tracks()->createMany($tracks->all());
-            $distribution->artists()->sync($data['artists']);
+
+            $artists = collect($data['artists']);
+
+            $artists->transform(fn ($artist) => [
+                'artist_id' => $artist['id'],
+                'role' => $artist['role'],
+            ]);
+
+            $distribution->artists()->sync($artists->all());
 
             foreach ($createdTracks as $key => $track) {
                 $track->artists()->sync($data['tracks'][$key]['artists']);
@@ -156,7 +162,7 @@ class DistributionController extends Controller
                 'role' => $artist['role'],
             ]);
 
-            $distribution->artists()->sync($artists);
+            $distribution->artists()->sync($artists->all());
 
             $distribution->store()->update([
                 'platforms' => $data['platforms'],
@@ -182,9 +188,18 @@ class DistributionController extends Controller
      */
     public function destroy(Distribution $distribution)
     {
-        $distribution->delete();
+        DB::beginTransaction();
+        try {
+            $distribution->tracks->each->delete();
+            $distribution->delete();
+            DB::commit();
 
-        return new DistributionResource($distribution);
+            return new DistributionResource($distribution);
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            return response()->json(['message' => 'Something went wrong'], 500);
+        }
     }
 
     public function updateStatus(Request $request, Distribution $distribution): DistributionResource

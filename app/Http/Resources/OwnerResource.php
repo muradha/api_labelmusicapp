@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class UserResource extends JsonResource
+class OwnerResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -18,13 +18,7 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
-            'roles' => RoleResource::collection($this->whenLoaded('roles')),
-            'token' => $this->whenNotNull($this->token),
-            'profile' => $this->whenLoaded('profile', fn() => $this->profile),
             'admin_approval' => $this->admin_approval,
-            'email_verified_at' => $this->email_verified_at,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
         ];
     }
 }

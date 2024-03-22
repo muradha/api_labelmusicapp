@@ -40,8 +40,8 @@ class DistributionResource extends JsonResource
             'submit_status' => $this->submit_status,
             'verification_status' => $this->verification_status,
             'description' => $this->description,
-            'platforms' => $this->whenLoaded('store') ? $this->store->platforms : null,
-            'territories' => $this->whenLoaded('store') ? $this->store->territories : null,
+            'platforms' => $this->whenLoaded('store', fn () => $this->store->platforms),
+            'territories' => $this->whenLoaded('store', fn () => $this->store->territories),
             'artists' => ArtistResource::collection($this->whenLoaded('artists')),
             // 'tracks' => $this->tracks,
         ];

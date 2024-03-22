@@ -13,8 +13,7 @@ class PlaylistPitchController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['role:admin|user']);
-        $this->middleware(['role:user'], ['only' => ['store']]);
+        $this->authorizeResource(PlaylistPitch::class, 'playlist_pitch');
     }
     /**
      * Display a listing of the resource.

@@ -8,6 +8,7 @@ use App\Http\Requests\UserRegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -15,7 +16,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password as RulesPassword;
 
 class AuthController extends Controller
 {
@@ -28,7 +31,12 @@ class AuthController extends Controller
         $user->save();
         $user->assignRole('user');
 
-        return (new UserResource($user))->response()->setStatusCode(201);
+        Auth::loginUsingId($user->id);
+
+        $user->token = $user->createToken('auth_token')->plainTextToken;
+        $user->sendEmailVerificationNotification();
+
+        return (new UserResource($user->load('profile', 'roles')))->response()->setStatusCode(201);
     }
 
 
@@ -36,10 +44,10 @@ class AuthController extends Controller
     {
         $data = $request->validated();
 
-        $user = User::with('roles')->where('email', $data['email'])->first();
+        $user = User::with('roles', 'profile')->where('email', $data['email'])->first();
 
-        if ($user->hasAnyRole('user') && Auth::attempt($data)) {
-                $user->token = $user->createToken('auth_token')->plainTextToken;
+        if ($user->hasAnyRole('user', 'sub-user') && Auth::attempt($data)) {
+            $user->token = $user->createToken('auth_token')->plainTextToken;
         } else {
             throw new HttpResponseException(response()->json([
                 'errors' => [
@@ -48,14 +56,14 @@ class AuthController extends Controller
             ], 401));
         }
 
-        return (new UserResource($user->load('profile')));
+        return (new UserResource($user));
     }
 
     public function adminLogin(UserLoginRequest $request): UserResource
     {
         $data = $request->validated();
 
-        $admin = User::with('roles')->where('email', $data['email'])->first();
+        $admin = User::with('roles', 'profile')->where('email', $data['email'])->first();
 
         if ($admin->hasAnyRole('admin', 'super-admin') && Auth::attempt($data)) {
             $admin->token = $admin->createToken('auth_token')->plainTextToken;
@@ -67,13 +75,20 @@ class AuthController extends Controller
             ], 401));
         }
 
-        return (new UserResource($admin->load('profile')));
+        return (new UserResource($admin));
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
         $user = Auth::user();
+
         $user->tokens()->delete();
+
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
 
         return response()->json(['message' => 'Logged out successfully']);
     }
@@ -86,7 +101,9 @@ class AuthController extends Controller
             throw new AuthorizationException();
         }
 
-        if ($user->markEmailAsVerified()) event(new Verified($user));
+        if (!$user->hasVerifiedEmail()) {
+            if ($user->markEmailAsVerified()) event(new Verified($user));
+        }
 
         return view('verify_email');
     }
@@ -101,5 +118,44 @@ class AuthController extends Controller
         $request->user()->sendEmailVerificationNotification();
 
         return response()->json(['message' => 'Verification link sent!']);
+    }
+
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $status = Password::sendResetLink(
+            $request->only('email'),
+        );
+
+        return $status === Password::RESET_LINK_SENT
+            ? response()->json(['status' => __($status)])
+            : response()->json(['message' => __($status)], 422);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email|exists:users,email',
+            'password' => ['required', 'confirmed', RulesPassword::defaults()],
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password)
+                ])->setRememberToken(Str::random(60));
+
+                $user->save();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? response()->json(['status' => __($status)])
+            : response()->json(['message' => __($status)], 422);
     }
 }

@@ -33,7 +33,7 @@ class UserRegisterRequest extends FormRequest
                 'string',
                 'email',
                 'max:255',
-                Rule::unique(User::class),
+                Rule::unique('users', 'email'),
             ],
             'password' => ['required', 'confirmed', Password::defaults()]
         ];

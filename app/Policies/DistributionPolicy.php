@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Distribution;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 use Illuminate\Support\Facades\Auth;
 
 class DistributionPolicy
@@ -22,7 +21,7 @@ class DistributionPolicy
      */
     public function view(User $user, Distribution $distribution): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $distribution->user_id;
+        return $user->hasAnyRole('admin') ?: ($user->id === $distribution->user_id) || ($user->currentTeam->owner->id === $distribution->user_id);
     }
 
     /**
@@ -38,7 +37,7 @@ class DistributionPolicy
      */
     public function update(User $user, Distribution $distribution): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $distribution->user_id;
+        return $user->hasAnyRole('admin') ?: ($user->id === $distribution->user_id) || ($user->currentTeam->owner->id === $distribution->user_id);
     }
 
     /**
@@ -46,6 +45,6 @@ class DistributionPolicy
      */
     public function delete(User $user, Distribution $distribution): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $distribution->user_id;
+        return $user->hasAnyRole('admin') ?: ($user->id === $distribution->user_id) || ($user->currentTeam->owner->id === $distribution->user_id);
     }
 }

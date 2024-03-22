@@ -12,11 +12,6 @@ use Illuminate\Support\Facades\Notification;
 
 class AnnouncementController extends Controller
 {
-
-    public function __construct()
-    {
-        $this->middleware(['role:admin'], ['except' => 'notification']);
-    }
     /**
      * Display a listing of the resource.
      */

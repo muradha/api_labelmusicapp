@@ -32,6 +32,7 @@ class UpdateArtistRequest extends FormRequest
                 Rule::unique('artists', 'email')->ignore($this->artist)
             ],
             'photo' => 'nullable|image|max:2048',
+            'admin_approval' => 'nullable|string|in:APPROVED,REJECTED',
         ];
     }
 }

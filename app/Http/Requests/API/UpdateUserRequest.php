@@ -32,6 +32,14 @@ class UpdateUserRequest extends FormRequest
             'password' => ['nullable', Password::defaults(), 'max:254'],
             'admin_approval' => 'nullable|string|in:APPROVED,REJECTED,PENDING',
             'role' => 'nullable|string|in:admin,operator',
+            'birth_date' => 'nullable|date',
+            'phone_number' => 'nullable|string|max:10',
+            'company_name' => 'nullable|string',
+            'street' => 'nullable|string',
+            'city' => 'nullable|string',
+            'province' => 'nullable|string',
+            'postal_code' => 'nullable|string',
+            'country' => 'nullable|string'
         ];
     }
 }
