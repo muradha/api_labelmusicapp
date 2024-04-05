@@ -14,7 +14,7 @@ class BankWithdrawPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->id === Auth::user()->id;
+        return $user->can('view bank withdraws');
     }
 
     /**
@@ -22,7 +22,10 @@ class BankWithdrawPolicy
      */
     public function view(User $user, BankWithdraw $bankWithdraw): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $bankWithdraw->user_id;
+        if ($user->can('view bank withdraws')) {
+            if ($user->id === $bankWithdraw->user_id) return true;
+        }
+        return false;
     }
 
     /**
@@ -30,7 +33,7 @@ class BankWithdrawPolicy
      */
     public function create(User $user): bool
     {
-        return $user->id === Auth::user()->id;
+        return $user->can('create bank withdraws');
     }
 
     /**
@@ -38,7 +41,7 @@ class BankWithdrawPolicy
      */
     public function update(User $user, BankWithdraw $bankWithdraw): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $bankWithdraw->user_id;
+        return $user->can('edit bank withdraws') && $user->id === $bankWithdraw->user_id;
     }
 
     /**
@@ -46,6 +49,6 @@ class BankWithdrawPolicy
      */
     public function delete(User $user, BankWithdraw $bankWithdraw): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $bankWithdraw->user_id;
+        return $user->can('delete bank withdraws') && $user->id === $bankWithdraw->user_id;
     }
 }

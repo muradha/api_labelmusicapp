@@ -53,7 +53,7 @@
         <h1>Email Verification Confirmation</h1>
         <p>Congratulations! Your email verification is successful.</p>
         <p>You can now fully access our platform.</p>
-        <a href="{{ env('APP_FRONTEND_URL').'/login' }}" class="button">Start Exploring</a>
+        <a href="{{ config('app.frontend_url') . '/login' }}" class="button">Start Exploring</a>
     </div>
 </body>
 

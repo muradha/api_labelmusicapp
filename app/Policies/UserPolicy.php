@@ -12,15 +12,15 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole('admin', 'operator');
+        return $user->can('view users');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, User $model): bool
+    public function view(User $user): bool
     {
-        return $user->hasAnyRole('admin', 'operator');
+        return $user->can('view users');
     }
 
     /**
@@ -28,7 +28,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasAnyRole('admin', 'operator');
+        return $user->can('create users');
     }
 
     /**
@@ -36,7 +36,7 @@ class UserPolicy
      */
     public function update(User $user, User $model): bool
     {
-        return $user->hasAnyRole('admin', 'operator');
+        return $user->can('edit users');
     }
 
     /**
@@ -44,6 +44,6 @@ class UserPolicy
      */
     public function delete(User $user, User $model): bool
     {
-        return $user->hasAnyRole('admin', 'operator');
+        return $user->can('delete users');
     }
 }

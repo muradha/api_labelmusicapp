@@ -70,7 +70,7 @@ class CustomVerifyEmail extends Notification
     {
         return (new MailMessage)
             ->subject('[Verification] Welcome to labelmiraclestudioapps')
-            ->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'))
+            ->from(config('mail.from.address'), config('mail.from.name'))
             ->view('email.verify', ['token' => $url]);
     }
     /**

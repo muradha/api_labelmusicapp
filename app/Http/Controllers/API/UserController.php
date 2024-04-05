@@ -18,6 +18,10 @@ use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(User::class, 'user');
+    }
     /**
      * Display a listing of the resource.
      */
@@ -34,6 +38,10 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         $data = $request->validated();
+
+        if ($data['verify_email'] === 'APPROVE') {
+            $data['email_verified_at'] = now();
+        }
 
         $user = User::create($data);
         $user->assignRole('user');
@@ -62,6 +70,10 @@ class UserController extends Controller
                 throw new HttpResponseException(response()->json(['message' => 'User is already in PROCESSING state.'], 400));
             }
 
+            if ($data['verify_email'] === 'APPROVE' && $user->email_verified_at === null) {
+                $data['email_verified_at'] = now();
+            }    
+
             if (Auth::user()->hasAnyRole('super-admin') && !empty($data['role']) && $user->hasAnyRole('user')) {
                 $user->syncRoles([$data['role']]);
             }
@@ -89,6 +101,8 @@ class UserController extends Controller
 
     public function updateStatus(Request $request, User $user)
     {
+        $this->authorize('edit admin approval');
+
         $data = $request->validate([
             'status' => 'required|string|in:APPROVED,REJECTED',
         ]);
@@ -112,6 +126,7 @@ class UserController extends Controller
 
     public function getUsersWithLog()
     {
+        $this->authorize('view user logs');
         $users = User::whereNotNull('last_login_time')->whereNotNull('last_login_ip')->get();
 
         return response()->json([

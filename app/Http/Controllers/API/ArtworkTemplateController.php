@@ -13,6 +13,15 @@ use Intervention\Image\Laravel\Facades\Image;
 
 class ArtworkTemplateController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['permission:generate artworks'], ['only' => ['generate']]);
+        $this->middleware(['permission:view artwork templates|create artwork templates|edit artwork templates|delete artwork templates'], ['only' => ['index', 'show']]);
+        $this->middleware(['permission:view artwork templates'], ['only' => ['index', 'show']]);
+        $this->middleware(['permission:create artwork templates'], ['only' => ['store']]);
+        $this->middleware(['permission:edit artwork templates'], ['only' => ['update']]);
+        $this->middleware(['permission:delete artwork templates'], ['only' => ['destroy']]);
+    }
     /**
      * Display a listing of the resource.
      */

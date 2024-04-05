@@ -43,11 +43,12 @@ class DistributionController extends Controller
      */
     public function store(StoreDistributionRequest $request)
     {
-        DB::beginTransaction();
 
         $uploadedCover = null;
         $uploadedTracksFile = null;
         try {
+            DB::beginTransaction();
+
             $data = $request->validated();
 
             if ($request->hasFile('cover') || !empty($data['cover'])) {

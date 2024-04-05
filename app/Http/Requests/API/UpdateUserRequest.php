@@ -31,6 +31,7 @@ class UpdateUserRequest extends FormRequest
             ],
             'password' => ['nullable', Password::defaults(), 'max:254'],
             'admin_approval' => 'nullable|string|in:APPROVED,REJECTED,PENDING',
+            'verify_email' => 'nullable|string|in:PENDING,APPROVE',
             'role' => 'nullable|string|in:admin,operator',
             'birth_date' => 'nullable|date',
             'phone_number' => 'nullable|string|max:10',

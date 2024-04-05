@@ -46,8 +46,8 @@ class AuthController extends Controller
 
     public function storeRegister(UserRegisterRequest $request, $token)
     {
-        DB::beginTransaction();
         try {
+            DB::beginTransaction();
             $data = $request->validated();
             $invite = null;
 

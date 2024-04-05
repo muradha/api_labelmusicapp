@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Artist;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 use Illuminate\Support\Facades\Auth;
 
 class ArtistPolicy
@@ -22,7 +21,16 @@ class ArtistPolicy
      */
     public function view(User $user, Artist $artist): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $artist->user_id;
+        if ($user->can('view artists')) {
+            if ($user->id === $artist->user_id) {
+                return true;
+            }
+            if (!empty($user->curentTeam) && $user->currentTeam->owner->id === $artist->user_id) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -30,7 +38,7 @@ class ArtistPolicy
      */
     public function create(User $user): bool
     {
-        return $user->id === Auth::user()->id;
+        return $user->can('create artists');
     }
 
     /**
@@ -38,7 +46,15 @@ class ArtistPolicy
      */
     public function update(User $user, Artist $artist): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $artist->user_id;
+        if($user->can('edit artists')){
+            if ($user->id === $artist->user_id) {
+                return true;
+            }
+            if (!empty($user->curentTeam) && $user->currentTeam->owner->id === $artist->user_id) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -46,6 +62,15 @@ class ArtistPolicy
      */
     public function delete(User $user, Artist $artist): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $artist->user_id;
+        if($user->can('delete artists')){
+            if ($user->id === $artist->user_id) {
+                return true;
+            }
+            if (!empty($user->curentTeam) && $user->currentTeam->owner->id === $artist->user_id) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

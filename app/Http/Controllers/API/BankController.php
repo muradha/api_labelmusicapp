@@ -9,10 +9,17 @@ use App\Http\Resources\BankCollection;
 use App\Http\Resources\BankResource;
 use App\Models\Bank;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Http\JsonResponse;
 
 class BankController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['permission:view banks|create banks|edit banks|delete banks'], ['only' => ['index', 'show']]);
+        $this->middleware(['permission:view banks'], ['only' => [ 'index', 'show']]);
+        $this->middleware(['permission:create banks'], ['only' => [ 'store']]);
+        $this->middleware(['permission:edit banks'], ['only' => ['update']]);
+        $this->middleware(['permission:delete banks'], ['only' => ['destroy']]);
+    }
     /**
      * Display a listing of the resource.
      */

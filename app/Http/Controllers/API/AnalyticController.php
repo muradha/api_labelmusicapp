@@ -7,66 +7,33 @@ use App\Http\Requests\API\Analytic\StoreAnalyticRequest;
 use App\Http\Requests\API\Analytic\UpdateAnalyticRequest;
 use App\Http\Resources\AnalyticCollection;
 use App\Http\Resources\AnalyticResource;
+use App\Interfaces\AnalyticRepositoryInterface;
 use App\Models\Analytic;
 use App\Models\Artist;
+use App\Policies\AnalyticPolicy;
 use Carbon\Carbon;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class AnalyticController extends Controller
 {
-    public function __construct(){
-        $this->middleware(['role:super-admin|admin|user']);
-        // $this->middleware(['role:user'], ['only' => 'index', 'showByPeriodAndArtist']);
+    private AnalyticRepositoryInterface $analyticRepository;
+
+    public function __construct(AnalyticRepositoryInterface $analyticRepository)
+    {
+        $this->authorizeResource(Analytic::class, 'analytic');
+        $this->analyticRepository = $analyticRepository;
     }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $user = Auth::user();
-        // $analytics = Analytic::orderBy('period', 'asc')->with('stores', 'artist')->get();
-
-        $year = Date('Y');
-        $startDate = Carbon::createFromDate($year, 1, 1)->startOfMonth();
-        $endDate = Carbon::createFromDate($year, 12, 31)->endOfMonth();
-
-        if ($user->hasAnyRole('admin', 'super-admin', 'operator')) {
-            $analytics = Analytic::with('artist')->whereBetween('period', [$startDate, $endDate])
-                ->orderBy('period')
-                ->get()
-                ->groupBy(function ($analytic) {
-                    return $analytic->period->format('F Y');
-                });
-        } else {
-            $analytics = Analytic::with('artist')->whereBetween('period', [$startDate, $endDate])
-                ->where('user_id', $user->id)
-                ->orderBy('period')
-                ->get()
-                ->groupBy(function ($analytic) {
-                    return $analytic->period->format('F Y');
-                });
-        }
-
-        $analytic = [];
-        foreach ($analytics as $key => $value) {
-            foreach ($value as $item) {
-                $analytic[] = [
-                    'period' => $key,
-                    'artist' => [
-                        'id' => $item['artist']['id'],
-                        'first_name' => $item['artist']['first_name'],
-                        'last_name' => $item['artist']['last_name'],
-                    ],
-                ];
-            }
-        }
-
-        $uniqueAnalytic = collect($analytic)->unique()->values()->all();
-
+        $artists = Artist::all();
         return response()->json([
-            'data' => $uniqueAnalytic
+            'data' => $artists
         ]);
     }
 
@@ -86,7 +53,15 @@ class AnalyticController extends Controller
             $analytic->stores()->sync($data['shops']);
         }
 
-        return (new AnalyticResource($analytic->load('artist', 'stores')))->response()->setStatusCode(201);
+        $user = Auth::user();
+
+        if ($user->hasAnyRole('admin', 'super-admin', 'operator')) {
+            $analytics = $this->analyticRepository->getArtistAnalyticsByPeriod($analytic->artist_id);
+        } else {
+            $analytics = $this->analyticRepository->getArtistAnalyticsByPeriod($analytic->artist_id, $user->id);
+        }
+
+        return (new AnalyticResource($analytic->load('artist', 'stores')))->additional(['analytics' => $analytics])->response()->setStatusCode(201);
     }
 
     /**
@@ -111,7 +86,15 @@ class AnalyticController extends Controller
             $analytic->stores()->sync($data['shops']);
         }
 
-        return new AnalyticResource($analytic->load('artist'));
+        $user = Auth::user();
+
+        if ($user->hasAnyRole('admin', 'super-admin', 'operator')) {
+            $analytics = $this->analyticRepository->getArtistAnalyticsByPeriod($analytic->artist_id);
+        } else {
+            $analytics = $this->analyticRepository->getArtistAnalyticsByPeriod($analytic->artist_id, $user->id);
+        }
+
+        return (new AnalyticResource($analytic->load('artist', 'stores')))->additional(['analytics' => $analytics]);
     }
 
     /**
@@ -122,6 +105,31 @@ class AnalyticController extends Controller
         $analytic->delete();
 
         return new AnalyticResource($analytic);
+    }
+
+    public function showByArtist(Artist $artist)
+    {
+        $user = Auth::user();
+
+        if ($user->hasAnyRole('super-admin', 'admin', 'operator')) {
+            $artists = $this->analyticRepository->getAnalyticsForArtist($artist->id);
+
+            $analytics = $this->analyticRepository->getArtistAnalyticsByPeriod($artist->id);
+        } else {
+            $artists = $this->analyticRepository->getAnalyticsForArtist($artist->id, $user->id);
+
+            $analytics = $this->analyticRepository->getArtistAnalyticsByPeriod($artist->id, $user->id);
+        }
+
+        if (empty($analytics)) {
+            throw new HttpResponseException(response()->json([
+                'errors' => [
+                    'message' => 'Analytic Not Found'
+                ]
+            ], 404));
+        }
+
+        return (new AnalyticCollection($artists))->additional(['analytics' => $analytics]);
     }
 
     public function showByPeriodAndArtist(string $period, Artist $artist)
@@ -139,7 +147,21 @@ class AnalyticController extends Controller
         $startDate = Carbon::createFromFormat('Y-m', $period)->startOfMonth();
         $endDate = Carbon::createFromFormat('Y-m', $period)->endOfMonth();
 
-        $analytics = Analytic::with('stores', 'artist')->whereBetween('period', [$startDate, $endDate])->where('artist_id', $artist->id)->get();
+        $artists = Analytic::with('stores', 'artist')->whereBetween('period', [$startDate, $endDate])->where('artist_id', $artist->id)->get();
+
+        $analytics = Analytic::where('artist_id', $artist->id)->whereBetween('period', [$startDate, $endDate])
+            ->select(
+                DB::raw('YEAR(period) as year'),
+                DB::raw('MONTHNAME(period) as month'),
+                DB::raw('SUM(analytic_store.revenue) as total_revenue'),
+                DB::raw('SUM(analytic_store.streaming) as total_streaming'),
+                DB::raw('SUM(analytic_store.download) as total_download'),
+            )
+            ->join('analytic_store', 'analytic_store.analytic_id', '=', 'analytics.id')
+            ->groupBy(DB::raw('YEAR(period)'), DB::raw('MONTH(period)'))
+            ->orderBy(DB::raw('YEAR(period)'), 'ASC')
+            ->orderBy(DB::raw('MONTH(period)'), 'ASC')
+            ->get();
 
         if (empty($analytics)) {
             throw new HttpResponseException(response()->json([
@@ -149,6 +171,6 @@ class AnalyticController extends Controller
             ], 404));
         }
 
-        return new AnalyticCollection($analytics);
+        return (new AnalyticCollection($artists))->additional(['analytics' => $analytics]);
     }
 }

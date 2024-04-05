@@ -10,33 +10,54 @@ use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as RulesPassword;
+use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
 {
     public function register(UserRegisterRequest $request): JsonResponse
     {
-        $data = $request->validated();
+        DB::beginTransaction();
+        try {
+            $data = $request->validated();
 
-        $user = new User($data);
-        $user->password = Hash::make($data['password']);
-        $user->save();
-        $user->assignRole('user');
+            $user = new User($data);
+            $user->password = Hash::make($data['password']);
+            $user->save();
+            $user->assignRole('user');
+    
+            Auth::loginUsingId($user->id);
+    
+            $user->token = $user->createToken('auth_token')->plainTextToken;
+            $user->sendEmailVerificationNotification();
 
-        Auth::loginUsingId($user->id);
+            DB::commit();
+    
+            return (new UserResource($user->load('profile', 'roles')))->response()->setStatusCode(201);
+        } catch (\Throwable $th) {
+            DB::rollback();
 
-        $user->token = $user->createToken('auth_token')->plainTextToken;
-        $user->sendEmailVerificationNotification();
+            if($th instanceof AuthorizationException) {
+                throw new HttpResponseException(response()->json([
+                    'errors' => [
+                        'message' => $th->getMessage()
+                    ],
+                ], 403));
+            }
 
-        return (new UserResource($user->load('profile', 'roles')))->response()->setStatusCode(201);
+            if($th instanceof HttpResponseException) {
+                throw $th;
+            }
+        }
+      
     }
 
 
@@ -48,6 +69,8 @@ class AuthController extends Controller
 
         if ($user->hasAnyRole('user', 'sub-user') && Auth::attempt($data)) {
             $user->token = $user->createToken('auth_token')->plainTextToken;
+            $role = Role::with('permissions')->findOrFail($user->roles->first()->id); // Replace $roleId with your actual role ID
+            $user->abilities = $role->permissions->pluck('name')->flatten()->toArray();
         } else {
             throw new HttpResponseException(response()->json([
                 'errors' => [
@@ -65,8 +88,9 @@ class AuthController extends Controller
 
         $admin = User::with('roles', 'profile')->where('email', $data['email'])->first();
 
-        if ($admin->hasAnyRole('admin', 'super-admin') && Auth::attempt($data)) {
+        if ($admin->hasAnyRole('admin', 'super-admin', 'operator') && Auth::attempt($data)) {
             $admin->token = $admin->createToken('auth_token')->plainTextToken;
+            $admin->abilities = $admin->getAllPermissions()->pluck('name');
         } else {
             throw new HttpResponseException(response()->json([
                 'errors' => [
@@ -83,12 +107,6 @@ class AuthController extends Controller
         $user = Auth::user();
 
         $user->tokens()->delete();
-
-        Auth::guard('web')->logout();
-
-        $request->session()->invalidate();
-
-        $request->session()->regenerateToken();
 
         return response()->json(['message' => 'Logged out successfully']);
     }
@@ -157,5 +175,15 @@ class AuthController extends Controller
         return $status === Password::PASSWORD_RESET
             ? response()->json(['status' => __($status)])
             : response()->json(['message' => __($status)], 422);
+    }
+
+    public function abilities() {
+        $user = User::with('roles')->find(Auth::user()->id);
+        $role = Role::with('permissions')->findOrFail($user->roles->first()->id); // Replace $roleId with your actual role ID
+        $permissions = $role->permissions->pluck('name')->flatten()->toArray();
+
+        return response()->json([
+            'data' => $permissions
+        ]);
     }
 }

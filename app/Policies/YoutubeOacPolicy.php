@@ -14,7 +14,7 @@ class YoutubeOacPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->id === Auth::user()->id;
+        return $user->can('view youtube services') && $user->id === Auth::user()->id;
     }
 
     /**
@@ -22,15 +22,15 @@ class YoutubeOacPolicy
      */
     public function view(User $user, YoutubeOac $youtube_oac): bool
     {
-        return $user->hasAnyRole('admin', 'super-admin') ?: $user->id === $youtube_oac->user_id;
+        return $user->can('view youtube services') && $user->id === $youtube_oac->user_id;
     }
- 
+
     /**
      * Determine whether the user can create models.
      */
     public function create(User $user): bool
     {
-        return $user->id === Auth::user()->id;
+        return $user->can('create youtube services') && $user->id === Auth::user()->id;
     }
 
     /**
@@ -38,7 +38,7 @@ class YoutubeOacPolicy
      */
     public function update(User $user, YoutubeOac $youtube_oac): bool
     {
-        return $user->hasAnyRole('admin');
+        return $user->can('edit youtube services') && $user->id === $youtube_oac->user_id;
     }
 
     /**
@@ -46,14 +46,6 @@ class YoutubeOacPolicy
      */
     public function delete(User $user, YoutubeOac $youtube_oac): bool
     {
-        return $user->hasAnyRole('admin');
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, YoutubeOac $youtube_oac): bool
-    {
-        return $user->hasAnyRole('admin');
+        return $user->can('');
     }
 }

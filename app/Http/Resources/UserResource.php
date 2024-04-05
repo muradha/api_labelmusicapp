@@ -19,6 +19,7 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'roles' => RoleResource::collection($this->whenLoaded('roles')),
+            'abilities' => $this->whenNotNull($this->abilities),
             'token' => $this->whenNotNull($this->token),
             'profile' => $this->whenLoaded('profile', fn() => $this->profile),
             'admin_approval' => $this->admin_approval,

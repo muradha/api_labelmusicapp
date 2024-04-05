@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class OwnerResource extends JsonResource
+class PermissionResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -17,9 +17,8 @@ class OwnerResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'email' => $this->email,
-            'admin_approval' => $this->admin_approval,
-            'email_verified_at' => $this->email_verified_at,
+            'abilities' => $this->whenNotNull($this->abilities),
+            'role_permissions' => $this->whenNotNull($this->role_permissions),
         ];
     }
 }

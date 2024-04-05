@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Distribution;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 
 class DistributionPolicy
 {
@@ -13,7 +12,7 @@ class DistributionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->id === Auth::user()->id;
+        return $user->can('view distributions');
     }
 
     /**
@@ -21,7 +20,14 @@ class DistributionPolicy
      */
     public function view(User $user, Distribution $distribution): bool
     {
-        return $user->hasAnyRole('admin') ?: ($user->id === $distribution->user_id) || ($user->currentTeam->owner->id === $distribution->user_id);
+        if ($user->can('view distributions')) {
+            if ($user->id === $distribution->user_id) return true;
+            if (!empty($user->curentTeam) && $user->currentTeam->owner->id === $distribution->user_id) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -29,7 +35,7 @@ class DistributionPolicy
      */
     public function create(User $user): bool
     {
-        return $user->id === Auth::user()->id;
+        return $user->can('create distributions');
     }
 
     /**
@@ -37,7 +43,16 @@ class DistributionPolicy
      */
     public function update(User $user, Distribution $distribution): bool
     {
-        return $user->hasAnyRole('admin') ?: ($user->id === $distribution->user_id) || ($user->currentTeam->owner->id === $distribution->user_id);
+        if($user->can('edit distributions')){
+            if ($user->id === $distribution->user_id) {
+                return true;
+            }
+            if (!empty($user->curentTeam) && $user->currentTeam->owner->id === $distribution->user_id) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -45,6 +60,15 @@ class DistributionPolicy
      */
     public function delete(User $user, Distribution $distribution): bool
     {
-        return $user->hasAnyRole('admin') ?: ($user->id === $distribution->user_id) || ($user->currentTeam->owner->id === $distribution->user_id);
+        if($user->can('delete distributions')){
+            if ($user->id === $distribution->user_id) {
+                return true;
+            }
+            if (!empty($user->curentTeam) && $user->currentTeam->owner->id === $distribution->user_id) {
+                return true;
+            }
+        }
+      
+        return false;
     }
 }

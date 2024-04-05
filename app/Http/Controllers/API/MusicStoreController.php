@@ -11,6 +11,14 @@ use Illuminate\Validation\Rule;
 
 class MusicStoreController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['permission:view shops|create shops|edit shops|delete shops'], ['only' => ['index', 'show']]);
+        $this->middleware(['permission:view shops'], ['only' => ['index', 'show']]);
+        $this->middleware(['permission:create shops'], ['only' => ['store']]);
+        $this->middleware(['permission:edit shops'], ['only' => ['update']]);
+        $this->middleware(['permission:delete shops'], ['only' => ['destroy']]);
+    }
     /**
      * Display a listing of the resource.
      */

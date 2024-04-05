@@ -16,6 +16,7 @@ class PaypalWithdrawResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'email_user' => $this->whenLoaded('user', $this->user->email),
             'name' => $this->whenLoaded('withdraw', $this->withdraw->name),
             'amount' => $this->whenLoaded('withdraw', $this->withdraw->amount),
             'status' => $this->whenLoaded('withdraw', $this->withdraw->status),

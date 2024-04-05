@@ -17,6 +17,7 @@ class AnnouncementController extends Controller
      */
     public function index()
     {
+        $this->authorize('view announcements');
         $announcements = Announcement::all();
 
         return response()->json([
@@ -29,6 +30,7 @@ class AnnouncementController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create announcements');
         $data = $request->validate([
             'title' => 'required|string|max:100|unique:announcements,title',
             'content' => 'required|string|max:100'

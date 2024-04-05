@@ -30,7 +30,7 @@ class BankWithdrawController extends Controller
         $user = Auth::user();
 
         if ($user->hasAnyRole('admin', 'super-admin', 'operator')) {
-            $withdrawals = BankWithdraw::with('withdraw')->get();
+            $withdrawals = BankWithdraw::with('withdraw', 'user')->get();
         } else {
             $withdrawals = BankWithdraw::with('withdraw')->where('user_id', $user->id)->get();
         }
@@ -43,8 +43,8 @@ class BankWithdrawController extends Controller
      */
     public function store(StoreBankWithdrawRequest $request)
     {
-        DB::beginTransaction();
         try {
+            DB::beginTransaction();
             $data = $request->validated();
 
             $user = Auth::user();
@@ -113,9 +113,10 @@ class BankWithdrawController extends Controller
         return new BankWithdrawResource($data);
     }
 
-    public function updateStatusWithdraw(BankWithdraw $bank, Request $request) {
-        DB::beginTransaction();
+    public function updateStatusWithdraw(BankWithdraw $bank, Request $request)
+    {
         try {
+            DB::beginTransaction();
             $data = $request->validate([
                 'status' => 'required|string|in:APPROVED,REJECTED',
             ]);
@@ -127,7 +128,7 @@ class BankWithdrawController extends Controller
                     $account->update([
                         'balance' => $bank->withdraw->amount + $account->balance,
                     ]);
-                }
+                } 
             } else {
                 throw new HttpResponseException(
                     response()->json(
@@ -147,13 +148,11 @@ class BankWithdrawController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            if($th instanceof HttpResponseException) {
+            if ($th instanceof HttpResponseException) {
                 throw $th;
             }
 
             return response()->json(['message' => $th->getMessage()], 500);
         }
-
     }
-    
 }

@@ -14,7 +14,7 @@ class PlaylistPitchPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->id === Auth::user()->id;
+        return $user->can('view playlist services');
     }
 
     /**
@@ -22,7 +22,7 @@ class PlaylistPitchPolicy
      */
     public function view(User $user, PlaylistPitch $playlist_pitch): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $playlist_pitch->user_id;
+        return $user->can('view playlist services') && $user->id === $playlist_pitch->user_id;
     }
 
     /**
@@ -30,7 +30,7 @@ class PlaylistPitchPolicy
      */
     public function create(User $user): bool
     {
-        return $user->id === Auth::user()->id;
+        return $user->can('create playlist services') && $user->id === Auth::user()->id;
     }
 
     /**
@@ -38,7 +38,7 @@ class PlaylistPitchPolicy
      */
     public function update(User $user, PlaylistPitch $playlist_pitch): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $playlist_pitch->user_id;
+        return $user->can('edit playlist services') && $user->id === $playlist_pitch->user_id;
     }
 
     /**
@@ -46,22 +46,6 @@ class PlaylistPitchPolicy
      */
     public function delete(User $user, PlaylistPitch $playlist_pitch): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $playlist_pitch->user_id;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, PlaylistPitch $playlist_pitch): bool
-    {
-        return $user->hasAnyRole('admin') ?: $user->id === $playlist_pitch->user_id;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, PlaylistPitch $playlist_pitch): bool
-    {
-        return $user->hasAnyRole('admin') ?: $user->id === $playlist_pitch->user_id;
+        return $user->can('delete playlist services') && $user->id === $playlist_pitch->user_id;
     }
 }

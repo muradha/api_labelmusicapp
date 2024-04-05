@@ -11,6 +11,14 @@ use Illuminate\Validation\Rule;
 
 class PlatformController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['permission:view platfomrs|create platfomrs|edit platfomrs|delete platfomrs'], ['only' => ['index', 'show']]);
+        $this->middleware(['permission:view platfomrs'], ['only' => ['index', 'show']]);
+        $this->middleware(['permission:create platfomrs'], ['only' => ['store']]);
+        $this->middleware(['permission:edit platfomrs'], ['only' => ['update']]);
+        $this->middleware(['permission:delete platfomrs'], ['only' => ['destroy']]);
+    }
     /**
      * Display a listing of the resource.
      */

@@ -18,7 +18,9 @@ use App\Http\Controllers\API\MusicStoreController;
 use App\Http\Controllers\API\OperatorController;
 use App\Http\Controllers\API\BankWithdrawController;
 use App\Http\Controllers\API\PaypalWithdrawController;
+use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\PlatformController;
+use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\Services\PlaylistPitchController;
 use App\Http\Controllers\API\Services\YoutubeOacController;
 use App\Http\Controllers\SubUser\UserMemberController;
@@ -56,6 +58,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('subusers', [SubuserController::class, 'index']);
         Route::get('subusers/{id}', [SubuserController::class, 'show']);
         Route::post('subusers/invite', [UserMemberController::class, 'invite']);
+        Route::post('subusers/{user}/detach', [SubuserController::class, 'detachSubuser']);
 
         Route::get('dashboard/user', [DashboardController::class, 'user']);
 
@@ -73,13 +76,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::apiResource('withdraw/banks', BankWithdrawController::class, ['as' => 'withdraw'])->except('show');
 
         Route::get('announcements/notification', [AnnouncementController::class, 'notification']);
-        Route::get('users/notifications', [UserController::class, 'unreadNotification']);
-        Route::post('users/notifications', [UserController::class, 'readNotification']);
+        Route::post('notifications/read', [UserController::class, 'readNotification']);
+        Route::get('notifications', [UserController::class, 'unreadNotification']);
 
         Route::patch('distributions/{distribution}/status', [DistributionController::class, 'updateStatus'])->middleware(['role:admin|super-admin']);
 
         Route::patch('users/{user}/status', [UserController::class, 'updateStatus'])->middleware(['role:admin']);
 
+        Route::get('artists/{artist}/analytics', [AnalyticController::class, 'showByArtist']);
         Route::get('analytics/{period}/artist/{artist}', [AnalyticController::class, 'showByPeriodAndArtist']);
 
         Route::apiResource('contributors', ContributorController::class);
@@ -104,13 +108,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('genres', [GenreController::class, 'index']);
         Route::get('platforms', [PlatformController::class, 'index']);
 
+        Route::get('announcements', [AnnouncementController::class, 'index']);
+        Route::post('announcements', [AnnouncementController::class, 'store']);
+
+        Route::apiResources([
+            'accounts' => AccountController::class,
+            'stores' => MusicStoreController::class,
+            'users' => UserController::class,
+            'banks' => BankController::class,
+        ]);
+
         Route::group(['middleware' => ['role:admin|super-admin']], function () {
             Route::get('dashboard/admin', [DashboardController::class, 'admin']);
 
             Route::get('users/log', [UserController::class, 'getUsersWithLog']);
-
-            Route::get('announcements', [AnnouncementController::class, 'index']);
-            Route::post('announcements', [AnnouncementController::class, 'store']);
 
             Route::apiResource('legals', LegalController::class)->except(['update', 'show']);
             Route::post('legals/bulk', [LegalController::class, 'bulkStore']);
@@ -118,16 +129,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('artworks', ArtworkTemplateController::class)->except(['show', 'generate']);
             Route::apiResource('genres', GenreController::class)->except(['index']);
             Route::apiResource('platforms', PlatformController::class)->except('index');
-
-            Route::apiResources([
-                'accounts' => AccountController::class,
-                'stores' => MusicStoreController::class,
-                'users' => UserController::class,
-                'banks' => BankController::class,
-            ]);
         });
 
         Route::middleware(['role:super-admin'])->group(function () {
+            Route::get('list/admins', [PermissionController::class, 'userAdmin']);
+            Route::get('list/admins/{user}', [PermissionController::class, 'showAdmin']);
+            Route::put('permissions/users/{user}', [PermissionController::class, 'updatePermissionByUser']); 
+            Route::get('permissions', [PermissionController::class, 'index']);
+            Route::get('roles', [RoleController::class, 'index']);
+            Route::get('roles/{role}', [RoleController::class, 'permissions']);
+            Route::put('roles/{role}', [RoleController::class, 'updatePermissions']);
             Route::apiResources([
                 'admins' => AdminController::class,
                 'operators' => OperatorController::class,

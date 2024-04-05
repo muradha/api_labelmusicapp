@@ -23,21 +23,21 @@ class UserMemberController extends Controller
 
     public function inviteParent(Request $request)
     {
-        DB::beginTransaction();
         try {
+            DB::beginTransaction();
             $request->validate([
                 'user_id' => 'required|numeric|exists:users,id'
             ]);
 
             $user = User::where('id', $request->only('user_id'))->first();
 
-            if($user->isTeamOwner()){
+            if ($user->isTeamOwner()) {
                 throw new HttpResponseException(response()->json([
                     'message' => 'User is a subusers parent'
                 ], 409));
             }
 
-            if($user->hasAnyRole('super-admin', 'admin')){
+            if ($user->hasAnyRole('super-admin', 'admin')) {
                 throw new HttpResponseException(response()->json([
                     'message' => 'User is not right roles'
                 ], 409));
@@ -66,8 +66,8 @@ class UserMemberController extends Controller
      */
     public function invite(Request $request)
     {
-        DB::beginTransaction();
         try {
+            DB::beginTransaction();
             $owner_id = null;
             $user = Auth::user();
 
@@ -76,16 +76,24 @@ class UserMemberController extends Controller
                 'owner_id' => [Rule::requiredIf($user->hasAnyRole('admin', 'super-admin')), 'numeric', 'max_digits:10', 'exists:teams,owner_id'],
             ]);
 
+            $invitedUser = User::where('email', $data['email'])->first();
+
+            if ($invitedUser && $invitedUser->isTeamOwner()) {
+                throw new HttpResponseException(response()->json([
+                    'message' => 'User is a subusers parent'
+                ]));
+            }
+
             if ($user->hasAnyRole('admin', 'super-admin')) {
                 $owner_id = $data['owner_id'];
-            }else{
+            } else {
                 $owner_id = $user->id;
             }
 
             $teamModel = config('teamwork.team_model');
             $team = $teamModel::where('owner_id', $owner_id)->first();
 
-            if(!$team){
+            if (!$team) {
                 throw new HttpResponseException(response()->json([
                     'message' => 'Owner not found'
                 ], 409));

@@ -13,6 +13,14 @@ use Illuminate\Support\Facades\Auth;
 
 class AccountController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['permission:view banks accounts|create banks accounts|edit banks accounts|delete banks accounts'], ['only' => ['index', 'show']]);
+        $this->middleware(['permission:view banks accounts'], ['only' => ['index', 'show']]);
+        $this->middleware(['permission:create banks accounts'], ['only' => ['store']]);
+        $this->middleware(['permission:edit banks accounts'], ['only' => ['update']]);
+        $this->middleware(['permission:delete banks accounts'], ['only' => ['destroy']]);
+    }
     /**
      * Display a listing of the resource.
      */

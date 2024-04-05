@@ -31,6 +31,7 @@ class BankWithdrawResource extends JsonResource
             'city' => $this->whenLoaded('withdraw', $this->withdraw->city),
             'postal_code' => $this->whenLoaded('withdraw', $this->withdraw->postal_code),
             'created_at' => $this->whenLoaded('withdraw', $this->withdraw->created_at),
+            'email_user' => $this->whenLoaded('user', $this->user->email),
         ];
     }
 }

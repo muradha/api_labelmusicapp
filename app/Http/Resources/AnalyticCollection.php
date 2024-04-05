@@ -16,4 +16,5 @@ class AnalyticCollection extends ResourceCollection
     {
         return parent::toArray($request);
     }
+
 }

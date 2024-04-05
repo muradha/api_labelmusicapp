@@ -13,7 +13,7 @@ class PaypalWithdrawPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->id === Auth::user()->id;
+        return $user->can('view paypal withdraws');
     }
 
     /**
@@ -21,7 +21,7 @@ class PaypalWithdrawPolicy
      */
     public function view(User $user, PaypalWithdraw $paypalWithdraw): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $paypalWithdraw->user_id;
+        return $user->can('view paypal withdraws') && $user->id === $paypalWithdraw->user_id;
     }
 
     /**
@@ -29,7 +29,7 @@ class PaypalWithdrawPolicy
      */
     public function create(User $user): bool
     {
-        return $user->id === Auth::user()->id;
+        return $user->can('create paypal withdraws');
     }
 
     /**
@@ -37,7 +37,7 @@ class PaypalWithdrawPolicy
      */
     public function update(User $user, PaypalWithdraw $paypalWithdraw): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $paypalWithdraw->user_id;
+        return $user->can('edit paypal withdraws') && $user->id === $paypalWithdraw->user_id;
     }
 
     /**
@@ -45,6 +45,6 @@ class PaypalWithdrawPolicy
      */
     public function delete(User $user, PaypalWithdraw $paypalWithdraw): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $paypalWithdraw->user_id;
+        return $user->can('delete paypal withdraws') && $user->id === $paypalWithdraw->user_id;
     }
 }

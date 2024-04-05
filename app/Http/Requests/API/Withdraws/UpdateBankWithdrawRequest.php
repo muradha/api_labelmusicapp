@@ -30,7 +30,7 @@ class UpdateBankWithdrawRequest extends FormRequest
             'province' => 'required|string|max:100',
             'city' => 'required|string|max:100',
             'postal_code' => 'required|numeric|max_digits:10',
-            'account_number' => 'required|string|max:100',
+            'account_number' => 'required|numeric|max_digits:10',
             'swift_code' => 'nullable|string|max:100',
             'bank_type' => 'required|string|max:100',
             'ach_code' => 'nullable|string|max:100',

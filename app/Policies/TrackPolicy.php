@@ -14,7 +14,7 @@ class TrackPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->id === Auth::user()->id;
+        return $user->can('view tracks') && $user->id === Auth::user()->id;
     }
 
     /**
@@ -22,7 +22,7 @@ class TrackPolicy
      */
     public function view(User $user, Track $track): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $track->distribution->user_id;
+        return $user->can('view tracks') && $user->id === $track->distribution->user_id;
     }
 
     /**
@@ -30,7 +30,7 @@ class TrackPolicy
      */
     public function create(User $user): bool
     {
-        return $user->id === Auth::user()->id;
+        return $user->can('create tracks') && $user->id === Auth::user()->id;
     }
 
     /**
@@ -38,7 +38,7 @@ class TrackPolicy
      */
     public function update(User $user, Track $track): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $track->distribution->user_id;
+        return $user->can('edit tracks') && $user->id === $track->distribution->user_id;
     }
 
     /**
@@ -46,6 +46,6 @@ class TrackPolicy
      */
     public function delete(User $user, Track $track): bool
     {
-        return $user->hasAnyRole('admin') ?: $user->id === $track->distribution->user_id;
+        return $user->can('delete tracks') && $user->id === $track->distribution->user_id;
     }
 }
